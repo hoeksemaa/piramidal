@@ -7,9 +7,7 @@ const UV_PER_LANE = 200; // each channel lane spans this many microvolts
 const TRACE = "#3a3533"; // trace ink sampled from the Marcy video
 
 type Props = {
-  patient: string;
-  info: string;
-  recording: string;
+  bed: number; // the bed's ID on the all-beds screen
   data: Int16Array; // sample-major: nCh values per sample, in uV
   t0: number; // performance.now() at clip time 0, shared by all tiles
   fs: number;
@@ -18,7 +16,7 @@ type Props = {
 
 // Scrolling strip chart: new samples enter at the right edge and move left. Each frame
 // shifts the old pixels left by whole pixels, then draws only the new samples.
-export function EegTile({ patient, info, recording, data, t0, fs, nCh }: Props) {
+export function EegTile({ bed, data, t0, fs, nCh }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -73,10 +71,7 @@ export function EegTile({ patient, info, recording, data, t0, fs, nCh }: Props) 
   return (
     <section className="tile">
       <header>
-        <span>
-          <b>{patient}</b> {info}
-        </span>
-        <span>{recording}</span>
+        <b>Bed {bed}</b>
       </header>
       <div className="plot">
         <canvas ref={canvasRef} />

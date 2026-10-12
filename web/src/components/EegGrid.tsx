@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { EegTile } from "./EegTile";
 
-type Tile = { file: string; patient: string; info: string; recording: string };
+type Tile = { file: string };
 type Manifest = { fs: number; channels: string[]; tiles: Tile[] };
 type Loaded = { manifest: Manifest; clips: Int16Array[]; t0: number };
 
@@ -31,9 +31,7 @@ export function EegGrid() {
       {manifest.tiles.map((t, i) => (
         <EegTile
           key={t.file}
-          patient={t.patient}
-          info={t.info}
-          recording={t.recording}
+          bed={i + 1}
           data={clips[i]}
           t0={t0}
           fs={manifest.fs}
