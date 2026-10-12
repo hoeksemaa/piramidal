@@ -17,13 +17,133 @@ body {
   font: 12px system-ui, sans-serif;
 }
 
+.app {
+  height: 100%;
+}
+
+/* About panel: a drawer over the wall's left edge. Closed, only its arrow tab shows. */
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 5;
+  width: 260px;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  color: var(--text);
+  line-height: 1.45;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sidebar.open {
+  transform: none;
+  box-shadow: 8px 0 24px rgba(43, 40, 39, 0.12);
+}
+
+/* The text scrolls inside the panel; the panel itself must not clip the tab. */
+.sidebar-body {
+  height: 100%;
+  padding: 20px 18px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* The open/close arrow: a dark button in the top-left corner, in the wall's left gutter. */
+.sidebar-tab {
+  position: absolute;
+  top: 10px;
+  left: calc(100% + 10px);
+  width: 36px;
+  height: 36px;
+  padding: 0 0 3px;
+  border: 0;
+  border-radius: 8px;
+  background: #2b2827;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(43, 40, 39, 0.3);
+}
+
+.sidebar-tab:hover {
+  background: #000;
+}
+
+.sidebar-tab:focus-visible {
+  outline: 2px solid var(--muted);
+  outline-offset: 2px;
+}
+
+.sidebar h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.sidebar .byline {
+  margin: 2px 0 18px;
+  color: var(--muted);
+}
+
+.sidebar a {
+  color: var(--text);
+}
+
+.sidebar section {
+  margin-bottom: 16px;
+}
+
+.sidebar h2 {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar p {
+  margin: 0 0 6px;
+}
+
+.legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.sidebar .source {
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.sidebar code {
+  font-size: 10.5px;
+}
+
+.sidebar .note {
+  color: var(--muted);
+  font-size: 11px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(4, 1fr);
   gap: 10px;
   height: 100%;
-  padding: 10px;
+  padding: 10px 10px 10px 56px; /* the left gutter holds the about-panel button */
   box-sizing: border-box;
 }
 
