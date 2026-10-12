@@ -49,42 +49,23 @@ export function Sidebar() {
         <section>
           <h2>What you see</h2>
           <p>
-            23 beds of real pediatric EEG, replayed in real time. Each bed shows
-            its last 10 s and a status light. During a seizure, the light is
-            red, and the bed gets a flashing red border and a SEIZURE tag.
-            Click a bed to open its full view.
-          </p>
-          <p>
-            On the right, the risk ranking lists every bed, live: beds in a
-            seizure first, flashing red, then the rest by risk score. Click a
-            row to open that bed.
-          </p>
-          <p>
-            In the full view, two dark lines mark the 10 s that the latest
-            answer read. A blue band marks each seizure, from its onset to its
-            end. On the right are three cards: the patient, the status now in
-            its color, and the pattern burden. The burden counts the model
-            answers of the last 3 min in each class.
+            23 beds of real pediatric EEG, replayed live, ranked by risk on the
+            right. Click a bed or a row to open it.
           </p>
         </section>
 
         <section>
           <h2>Status light</h2>
-          <p>
-            Red means that a seizure is going on, by the seizure rule below.
-            Otherwise, the light shows the latest model answer. A new answer
-            comes every 2 s and reads the last 10 s.
-          </p>
+          <p>The latest model answer: new every 2 s, reading the last 10 s.</p>
           <ul className="legend">
             <li>
               <span className="light seizure" /> Seizure going on
             </li>
             <li>
-              <span className="light pattern" /> Concerning: an IIC pattern
-              (LPD, GPD, LRDA, GRDA), or one seizure call with P(SZ) ≥ 0.9
+              <span className="light pattern" /> IIC pattern, or one seizure call
             </li>
             <li>
-              <span className="light ok" /> Other, or a seizure call below 0.9
+              <span className="light ok" /> Other
             </li>
           </ul>
         </section>
@@ -92,114 +73,72 @@ export function Sidebar() {
         <section>
           <h2>Seizure rule</h2>
           <p>
-            A seizure is an event, not one answer. The rule follows the
-            clinical reading:
+            Starts after 2 answers in a row with P(SZ) ≥ 0.9; ends after 5
+            without. Onset ≈ the start of the first seizure window.
           </p>
           <p>
-            <b>Start:</b> 2 red answers in a row. A real seizure lasts at least
-            10 s, so it shows in 2 overlapping windows. A lone red answer is
-            usually flicker at the 0.9 cut.
-          </p>
-          <p>
-            <b>End:</b> 5 answers in a row that are not red, about 10 s of
-            non-seizure EEG. A shorter dip is the same seizure.
-          </p>
-          <p>
-            <b>Onset ≈</b> the start of the first red window. Clinicians date a
-            seizure from its first EEG change, not from the time they see it.{" "}
-            <b>End ≈</b> the end of the last red window.
-          </p>
-          <p>
-            On a test set of 23 clips with one seizure each, the rule finds 22
-            seizures, a median 10 s after the expert onset. Its onset estimate
-            is a median 2 s early. The 0.9 cut comes from that test set.
-          </p>
-          <p>
-            On the 23 random clips here, it finds all 3 labeled seizures. But
-            it also makes 13 false events in 60 min of seizure-free EEG. The
-            model was trained on adult ICU EEG, not on these children.
+            Test set: 22 of 23 seizures found, a median 10 s late. Here: 3 of 3
+            found, but 13 false alarms in 60 min.
           </p>
         </section>
 
         <section>
           <h2>Risk score</h2>
           <p>
-            A simple demo score, from 0 to 100. Each model answer of the last 3
-            min scores its severity: Other 0, GRDA 1, GPD 2, LRDA 3, LPD 4, SZ
-            5. The risk score is the mean, scaled to 0–100.
+            Mean severity of the last 3 min (Other 0, GRDA 1, GPD 2, LRDA 3,
+            LPD 4, SZ 5), as 0–100.
           </p>
           <p>
-            <b>Not a clinical score.</b> This demo has no data to test or
-            calibrate a risk score. With ICU EEG, expert labels, and patient
-            outcomes, a validated score is possible, such as 2HELPS2B, which
-            gives a patient&apos;s seizure risk for the next 72 h.
+            <b>Demo only, not validated.</b> A real score needs ICU EEG with
+            expert labels and outcomes, as for 2HELPS2B.
           </p>
         </section>
 
         <section>
           <h2>Model · SPaRCNet</h2>
           <p>
-            An open classifier from the MGH Westover lab (Jing et al.,{" "}
-            <i>Neurology</i> 2023). It reads 10 s of 16-channel EEG and gives 6
-            classes: seizure, 4 ictal-interictal continuum patterns, or other. A
-            new answer comes every 2 s.
-          </p>
-          <p>
-            <b>Why:</b> it is open, small (4 MB), and fast on a laptop. Its
-            classes are the ICU&apos;s own terms. It stands in for a production
+            Open EEG classifier (MGH, <i>Neurology</i> 2023): seizure, 4 IIC
+            patterns, or other. Small and fast; a stand-in for a production
             model.
           </p>
           <p className="source">
-            Source: weights <code>model_1130.pt</code> from{" "}
             <a
               href="https://github.com/bdsp-core/IIIC-SPaRCNet/blob/main/SPaRCNet/model_1130.pt"
               target="_blank"
               rel="noopener noreferrer"
             >
-              github.com/bdsp-core/IIIC-SPaRCNet
-            </a>
-            . Paper:{" "}
+              Weights
+            </a>{" "}
+            ·{" "}
             <a
               href="https://doi.org/10.1212/WNL.0000000000207127"
               target="_blank"
               rel="noopener noreferrer"
             >
-              doi:10.1212/WNL.0000000000207127
+              Paper
             </a>
-            .
           </p>
         </section>
 
         <section>
           <h2>Data · CHB-MIT</h2>
           <p>
-            Scalp EEG from 23 children and young adults at Boston
-            Children&apos;s Hospital (PhysioNet). Each bed plays a random 3
-            minutes of that patient&apos;s recordings, as on a real ward. 3 of
-            the 23 clips hold an expert-labeled seizure.
-          </p>
-          <p>
-            <b>Why:</b> it is open, has expert seizure labels, and uses the same
-            16 bipolar channels as the model.
+            Pediatric scalp EEG. One random 3 min per patient; 3 of 23 hold a
+            labeled seizure.
           </p>
           <p className="source">
-            Source:{" "}
             <a
               href="https://physionet.org/content/chbmit/1.0.0/"
               target="_blank"
               rel="noopener noreferrer"
             >
-              physionet.org/content/chbmit/1.0.0
+              PhysioNet
             </a>
-            ; EEG files through its AWS mirror,{" "}
-            <code>s3://physionet-open/chbmit/1.0.0</code>. License: ODC-By 1.0.
+            , via <code>s3://physionet-open</code> · ODC-By 1.0
           </p>
         </section>
 
-        <p className="note">
-          Model outputs are computed in advance and replayed in step with the
-          EEG. Not for clinical use.
-        </p>
+        <p className="note">Outputs computed in advance. Not for clinical use.</p>
       </div>
     </aside>
   );

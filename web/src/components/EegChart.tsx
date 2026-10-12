@@ -6,7 +6,7 @@ import { hms, sampleAt } from "@/lib/playback";
 const TRACE = "#3a3533"; // trace ink sampled from the Marcy video
 const GRID = "#ebe8e6";
 const MUTED = "#8a8685";
-export const AXIS_H = 20; // CSS px at the bottom for the time axis
+export const AXIS_H = 32; // CSS px at the bottom for the time axis
 
 type Props = {
   data: Int16Array; // sample-major: nCh values per sample, in uV
@@ -45,8 +45,8 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLa
     const pps = w / perWindow; // pixels per sample
     // EEG convention: negative is up.
     const yOf = (n: number, c: number) => (c + 0.5) * lane + (data[(n % total) * nCh + c] * lane) / uvPerLane;
-    // Label every 1, 2, 5, or 10 s: the first that leaves at least 80 CSS px between labels.
-    const labelEvery = [1, 2, 5, 10].find((s) => (s * fs * pps) / dpr >= 80) ?? 10;
+    // Label every 1, 2, 5, or 10 s: the first that leaves at least 140 CSS px between labels.
+    const labelEvery = [1, 2, 5, 10].find((s) => (s * fs * pps) / dpr >= 140) ?? 10;
     const labelOf = (n: number) => axisPrefix + hms(axisStartS! + (n % total) / fs);
     const pending: number[] = []; // second marks whose label does not fit whole yet
 
@@ -98,7 +98,7 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLa
         if (axis) {
           // Each label is drawn once, centered on its tick, when it fits whole; then it scrolls.
           ctx.fillStyle = MUTED;
-          ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+          ctx.font = `${20 * dpr}px system-ui, sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           while (pending.length) {
