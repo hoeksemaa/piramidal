@@ -1,7 +1,7 @@
 """Download CHB-MIT (PhysioNet, ODC-By 1.0) files into DEST_DIR. Skips files it has.
 
 Usage:
-  fetch_chbmit.py DEST_DIR                          # SUBJECT-INFO + the 24 chbNN-summary.txt files
+  fetch_chbmit.py DEST_DIR                          # RECORDS, SUBJECT-INFO, and the 24 chbNN-summary.txt files
   fetch_chbmit.py DEST_DIR chb01/chb01_03.edf ...   # the same, plus these EDF files
 """
 import os
@@ -26,7 +26,7 @@ def fetch(dest, rel):
 def main():
     dest, files = sys.argv[1], sys.argv[2:]
     os.makedirs(dest, exist_ok=True)
-    rels = ["SUBJECT-INFO"] + [f"chb{i:02d}/chb{i:02d}-summary.txt" for i in range(1, 25)] + files
+    rels = ["RECORDS", "SUBJECT-INFO"] + [f"chb{i:02d}/chb{i:02d}-summary.txt" for i in range(1, 25)] + files
     with ThreadPoolExecutor(6) as pool:
         for msg in pool.map(lambda r: fetch(dest, r), rels):
             print(msg, flush=True)

@@ -83,12 +83,17 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLa
         ctx.strokeStyle = TRACE;
         ctx.lineWidth = lineWidth * dpr;
         ctx.lineJoin = "round"; // miter joins spike on dense zigzags
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, w, lanesH); // large waves can cross lanes, but never cover the time axis
+        ctx.clip();
         ctx.beginPath();
         for (let c = 0; c < nCh; c++) {
           ctx.moveTo(xOf(from), yOf(from, c));
           for (let n = from + 1; n <= target; n++) ctx.lineTo(xOf(n), yOf(n, c));
         }
         ctx.stroke();
+        ctx.restore();
 
         if (axis) {
           // Each label is drawn once, centered on its tick, when it fits whole; then it scrolls.

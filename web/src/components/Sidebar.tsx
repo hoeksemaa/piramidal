@@ -103,9 +103,14 @@ export function Sidebar() {
             <b>End ≈</b> the end of the last red window.
           </p>
           <p>
-            On our 23 clips, the rule finds 22 seizures, a median 10 s after
-            the expert onset. Its onset estimate is a median 2 s early. The 0.9
-            cut comes from these same clips, so these numbers are optimistic.
+            On a test set of 23 clips with one seizure each, the rule finds 22
+            seizures, a median 10 s after the expert onset. Its onset estimate
+            is a median 2 s early. The 0.9 cut comes from that test set.
+          </p>
+          <p>
+            On the 23 random clips here, it finds all 3 labeled seizures. But
+            it also makes 13 false events in 60 min of seizure-free EEG. The
+            model was trained on adult ICU EEG, not on these children.
           </p>
         </section>
 
@@ -147,8 +152,9 @@ export function Sidebar() {
           <h2>Data · CHB-MIT</h2>
           <p>
             Scalp EEG from 23 children and young adults at Boston
-            Children&apos;s Hospital (PhysioNet). Each bed plays one 3-minute
-            clip with one expert-labeled seizure.
+            Children&apos;s Hospital (PhysioNet). Each bed plays a random 3
+            minutes of that patient&apos;s recordings, as on a real ward. 3 of
+            the 23 clips hold an expert-labeled seizure.
           </p>
           <p>
             <b>Why:</b> it is open, has expert seizure labels, and uses the same
