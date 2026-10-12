@@ -7,6 +7,7 @@ import { BurdenHistogram } from "./BurdenHistogram";
 import { AXIS_H, EegChart } from "./EegChart";
 import { ModelWindow, STRIP_H } from "./ModelWindow";
 import { SeizureMarks } from "./SeizureMarks";
+import { StatusCard } from "./StatusCard";
 import { StatusLight } from "./StatusLight";
 
 const WINDOW_S = 20;
@@ -34,7 +35,7 @@ type Props = {
 
 // One bed, opened over the wall, still live. Left three quarters: the last 20 s of EEG with channel
 // names, a time axis, the latest model answer's 10 s window, and seizure events. Right quarter:
-// the patient, then the pattern burden.
+// three cards: the patient, the status now, and the pattern burden.
 export function BedDetail({ bed, name, info, recording, data, probs, classes, events, k, looped, stepS, probWindowS, channels, t0, fs, axisStartS, axisPrefix, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -43,6 +44,7 @@ export function BedDetail({ bed, name, info, recording, data, probs, classes, ev
   }, [onClose]);
 
   const ongoing = ongoingEvent(events, k);
+  const status = bedStatus(events, probs[k], k, classes);
   const clock = (s: number) => axisPrefix + hms(axisStartS + s);
   const clipS = data.length / channels.length / fs;
 
@@ -53,13 +55,8 @@ export function BedDetail({ bed, name, info, recording, data, probs, classes, ev
         <div className="detail-main">
           <header>
             <b>Bed {bed}</b>
-            <StatusLight status={bedStatus(events, probs[k], k, classes)} answer={probs[k]} classes={classes} />
+            <StatusLight status={status} answer={probs[k]} classes={classes} />
             <span>{answerLabel(probs[k], classes)}</span>
-            {ongoing && (
-              <span className="seizure-now">
-                Seizure detected {clock(ongoing.detectS)} · onset ≈ {clock(ongoing.onsetS)}
-              </span>
-            )}
           </header>
           <div className="detail-body">
             <div className="channels-col">
@@ -105,7 +102,7 @@ export function BedDetail({ bed, name, info, recording, data, probs, classes, ev
           </div>
         </div>
         <aside className="detail-side">
-          <div className="patient">
+          <section className="card patient">
             <h2>{name}</h2>
             <p>{info || "sex and age not listed"}</p>
             <dl>
@@ -116,7 +113,8 @@ export function BedDetail({ bed, name, info, recording, data, probs, classes, ev
               <dt>Clip start</dt>
               <dd>{clock(0)}</dd>
             </dl>
-          </div>
+          </section>
+          <StatusCard status={status} answer={probs[k]} classes={classes} ongoing={ongoing} clock={clock} />
           <BurdenHistogram probs={probs} classes={classes} k={k} looped={looped} stepS={stepS} clipS={clipS} />
         </aside>
         <button className="close" aria-label="Close" onClick={onClose}>

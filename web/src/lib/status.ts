@@ -12,6 +12,16 @@ export const SEVERITY_ORDER = Object.keys(LEVEL).sort((a, b) => LEVEL[a] - LEVEL
 // Display color per severity 1-6: green, 2 yellow, 2 orange, red.
 export const SEVERITY_COLORS = ["#3fa56b", "#e3c21a", "#e3c21a", "#ec7a2a", "#ec7a2a", "#e5484d"];
 
+/** Display color of one class: the meter's color for its severity. */
+export const classColor = (c: string) => SEVERITY_COLORS[LEVEL[c] - 1];
+/** Full names of the 4 IIC patterns (ACNS terms). */
+export const IIC_NAMES: Record<string, string> = {
+  GRDA: "Generalized rhythmic delta activity",
+  GPD: "Generalized periodic discharges",
+  LRDA: "Lateralized rhythmic delta activity",
+  LPD: "Lateralized periodic discharges",
+};
+
 export type Status = "ok" | "pattern" | "seizure";
 
 const argmax = (p: number[]) => p.indexOf(Math.max(...p));

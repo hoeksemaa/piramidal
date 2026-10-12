@@ -326,19 +326,80 @@ body {
   min-width: 0;
 }
 
+/* Three cards, top to bottom: the patient, the status now, and the pattern burden. */
 .detail-side {
   display: flex;
   flex: 1;
   flex-direction: column;
-  align-items: center;
+  gap: 12px;
   min-width: 0;
-  padding: 36px 0 0 16px;
-  border-left: 1px solid var(--border);
+  padding-top: 52px; /* room for the close button */
   overflow-y: auto;
 }
 
+.card {
+  margin: 0;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
 .patient {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+}
+
+/* The status now: one big word on the status color. A seizure card flashes, like the wall. */
+.status-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 16px;
+  border: 0;
+  text-align: center;
+  transition: background-color 0.3s;
+}
+
+.status-card b {
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.status-card span {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.status-card.seizure {
+  padding: 28px 16px;
+  animation: seizure-card 0.3s ease-in-out infinite alternate;
+}
+
+.status-card.seizure b {
+  font-size: 40px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@keyframes seizure-card {
+  from {
+    background-color: #e5484d;
+  }
+  to {
+    background-color: #f39a9d;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-card.seizure {
+    animation: none;
+  }
 }
 
 .patient h2 {
@@ -366,12 +427,9 @@ body {
   color: var(--text);
 }
 
-/* Pattern burden: one bar per class, from no seizure (left) to seizure (right), as % of time. */
+/* Pattern burden: one bar per class, from no seizure (left) to seizure (right), as a count of answers. */
 .burden {
-  width: 100%;
-  max-width: 300px;
-  margin: auto 0;
-  padding: 16px 0;
+  padding-bottom: 18px;
 }
 
 .burden figcaption {
@@ -408,7 +466,7 @@ body {
   transition: height 0.3s;
 }
 
-.burden-pct {
+.burden-count {
   position: absolute;
   left: 0;
   right: 0;
@@ -420,6 +478,7 @@ body {
 }
 
 .burden-labels {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 6px;
@@ -428,35 +487,41 @@ body {
   text-align: center;
 }
 
-.burden-axis {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  font-size: 10px;
+/* A class name: hover (or tab to it) for a short description, shown under the whole row so it
+   never runs past the panel's edges. */
+.burden-label {
+  justify-self: center;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  outline: none;
 }
 
-/* A thin arrow between "no seizure" and "seizure". */
-.burden-arrow {
-  position: relative;
-  flex: 1;
-  border-top: 1px solid var(--muted);
+.burden-label:hover,
+.burden-label:focus-visible {
+  color: var(--text);
 }
 
-.burden-arrow::after {
-  content: "";
+.burden-tip {
+  display: none;
   position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
   right: 0;
-  top: -4px;
-  border: 3.5px solid transparent;
-  border-left: 6px solid var(--muted);
-  border-right: 0;
+  z-index: 1;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: #2b2827;
+  box-shadow: 0 4px 12px rgba(43, 40, 39, 0.25);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: left;
 }
 
-.burden-note {
-  margin: 12px 0 0;
-  font-size: 10.5px;
-  text-align: center;
+.burden-label:hover .burden-tip,
+.burden-label:focus-visible .burden-tip {
+  display: block;
 }
 
 .close {
@@ -599,13 +664,6 @@ body {
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 0 2px #fff;
-}
-
-.seizure-now {
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(76, 107, 193, 0.1);
-  color: var(--accent);
 }
 
 /* The channel names, and the time axis unit level with the axis labels. */

@@ -57,8 +57,9 @@ export function Sidebar() {
           <p>
             In the full view, two dark lines mark the 10 s that the latest
             answer read. A blue band marks each seizure, from its onset to its
-            end. On the right, the pattern burden shows the share of the last 3
-            min in each class, from no seizure to seizure.
+            end. On the right are three cards: the patient, the status now in
+            its color, and the pattern burden. The burden counts the model
+            answers of the last 3 min in each class.
           </p>
         </section>
 
