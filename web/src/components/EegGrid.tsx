@@ -7,7 +7,14 @@ import { BedDetail } from "./BedDetail";
 import { EegTile } from "./EegTile";
 
 type Tile = { file: string; info: string; probs: number[][]; start_s: number; clock_start_s: number | null };
-type Manifest = { fs: number; channels: string[]; classes: string[]; prob_step_s: number; tiles: Tile[] };
+type Manifest = {
+  fs: number;
+  channels: string[];
+  classes: string[];
+  prob_step_s: number;
+  prob_window_s: number;
+  tiles: Tile[];
+};
 type Loaded = { manifest: Manifest; clips: Int16Array[]; t0: number };
 
 export function EegGrid() {
@@ -78,6 +85,8 @@ export function EegGrid() {
           probs={manifest.tiles[open].probs}
           classes={manifest.classes}
           k={k}
+          stepS={manifest.prob_step_s}
+          probWindowS={manifest.prob_window_s}
           channels={manifest.channels}
           t0={t0}
           fs={manifest.fs}

@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { sampleAt } from "@/lib/playback";
 
-const UV_PER_LANE = 200; // each channel lane spans this many microvolts
 const TRACE = "#3a3533"; // trace ink sampled from the Marcy video
 const GRID = "#ebe8e6";
 const MUTED = "#8a8685";
@@ -16,6 +15,7 @@ type Props = {
   nCh: number;
   windowS: number; // seconds of EEG across the chart width; the newest sample is at the right edge
   lineWidth?: number; // CSS px
+  uvPerLane?: number; // each channel lane spans this many microvolts; higher squishes the traces
   axisStartS?: number; // if set, draw a time axis: the time of clip sample 0, in seconds after midnight
   axisPrefix?: string; // put before each axis label
 };
@@ -29,7 +29,7 @@ const hms = (s: number) => {
 // Scrolling strip chart: new samples enter at the right edge and move left. Each frame
 // shifts the old pixels left by whole pixels, then draws only the new samples. The time
 // axis and 1 s gridlines are drawn into the same image, so they scroll with the EEG.
-export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, axisStartS, axisPrefix = "" }: Props) {
+export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLane = 200, axisStartS, axisPrefix = "" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, axisSta
     const perWindow = fs * windowS;
     const pps = w / perWindow; // pixels per sample
     // EEG convention: negative is up.
-    const yOf = (n: number, c: number) => (c + 0.5) * lane + (data[(n % total) * nCh + c] * lane) / UV_PER_LANE;
+    const yOf = (n: number, c: number) => (c + 0.5) * lane + (data[(n % total) * nCh + c] * lane) / uvPerLane;
     // Label every 1, 2, 5, or 10 s: the first that leaves at least 80 CSS px between labels.
     const labelEvery = [1, 2, 5, 10].find((s) => (s * fs * pps) / dpr >= 80) ?? 10;
     const labelOf = (n: number) => axisPrefix + hms(axisStartS! + (n % total) / fs);
@@ -113,7 +113,7 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, axisSta
     raf = requestAnimationFrame(frame);
 
     return () => cancelAnimationFrame(raf);
-  }, [data, t0, fs, nCh, windowS, lineWidth, axisStartS, axisPrefix]);
+  }, [data, t0, fs, nCh, windowS, lineWidth, uvPerLane, axisStartS, axisPrefix]);
 
   return (
     <div className="plot">

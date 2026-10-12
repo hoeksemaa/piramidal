@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { answerLabel } from "@/lib/status";
 import { AXIS_H, EegChart } from "./EegChart";
+import { SeverityMeter } from "./SeverityMeter";
 import { StatusLight } from "./StatusLight";
 
 const WINDOW_S = 20;
@@ -15,6 +16,8 @@ type Props = {
   probs: number[][];
   classes: string[];
   k: number;
+  stepS: number;
+  probWindowS: number;
   channels: string[];
   t0: number;
   fs: number;
@@ -23,8 +26,9 @@ type Props = {
   onClose: () => void;
 };
 
-// One bed, opened over the wall: the last 20 s of EEG with channel names and a time axis, still live.
-export function BedDetail({ bed, name, info, data, probs, classes, k, channels, t0, fs, axisStartS, axisPrefix, onClose }: Props) {
+// One bed, opened over the wall: the last 20 s of EEG with channel names, a time axis, and a
+// severity meter, still live.
+export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, probWindowS, channels, t0, fs, axisStartS, axisPrefix, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -58,8 +62,20 @@ export function BedDetail({ bed, name, info, data, probs, classes, k, channels, 
             nCh={channels.length}
             windowS={WINDOW_S}
             lineWidth={1}
+            uvPerLane={400}
             axisStartS={axisStartS}
             axisPrefix={axisPrefix}
+          />
+          <span className="meter-label">Severity</span>
+          <SeverityMeter
+            probs={probs}
+            classes={classes}
+            stepS={stepS}
+            probWindowS={probWindowS}
+            windowS={WINDOW_S}
+            t0={t0}
+            fs={fs}
+            clipSamples={data.length / channels.length}
           />
         </div>
       </section>

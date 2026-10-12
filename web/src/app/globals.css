@@ -171,10 +171,32 @@ body {
   color: var(--text);
 }
 
+/* Names | chart, then label | meter: the meter's columns line up with the chart's time. */
 .detail-body {
-  display: flex;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  grid-template-rows: 1fr auto;
+  row-gap: 6px;
   flex: 1;
   min-height: 0;
+}
+
+.meter-label {
+  align-self: center;
+  justify-self: end;
+  padding-right: 10px;
+  font-size: 11px;
+}
+
+.meter {
+  position: relative;
+}
+
+.meter canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* One name per lane: equal flex heights line up with the chart's equal lanes. */
