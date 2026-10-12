@@ -41,16 +41,40 @@ body {
 .tile header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 8px;
   padding-bottom: 6px;
   white-space: nowrap;
-  overflow: hidden;
 }
 
 .tile header b {
   color: var(--text);
   font-size: 13px;
   font-weight: 500;
+}
+
+/* Model status per bed: green = Other, yellow = one of the 4 IIC patterns, red = seizure. */
+.light {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-right: 2px;
+  border-radius: 50%;
+}
+
+.light.ok {
+  background: #3fa56b;
+  box-shadow: 0 0 0 3px rgba(63, 165, 107, 0.18);
+}
+
+.light.pattern {
+  background: #e3a21a;
+  box-shadow: 0 0 0 3px rgba(227, 162, 26, 0.2);
+}
+
+.light.seizure {
+  background: #e5484d;
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.22);
 }
 
 .plot {
@@ -68,4 +92,126 @@ body {
 
 .status {
   padding: 16px;
+}
+
+.tile {
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.tile:hover {
+  border-color: #cfcac6;
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--muted);
+  outline-offset: 2px;
+}
+
+/* One bed opened over the wall. The backdrop takes every click outside the bed. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(43, 40, 39, 0.35);
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  width: 92vw;
+  height: 88vh;
+  padding: 12px 16px 16px;
+  box-sizing: border-box;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(43, 40, 39, 0.25);
+}
+
+.detail header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+}
+
+.detail header b {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.name {
+  color: var(--muted);
+}
+
+.detail header .name {
+  font-size: 16px;
+}
+
+.close {
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 34px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: #efedeb;
+  color: var(--text);
+}
+
+/* Names | chart, then label | meter: the meter's columns line up with the chart's time. */
+.detail-body {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  grid-template-rows: 1fr auto;
+  row-gap: 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.meter-label {
+  align-self: center;
+  justify-self: end;
+  padding-right: 10px;
+  font-size: 11px;
+}
+
+.meter {
+  position: relative;
+}
+
+.meter canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* One name per lane: equal flex heights line up with the chart's equal lanes. */
+.channels {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0 10px 0 0;
+  list-style: none;
+  font-size: 11px;
+}
+
+.channels li {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-end;
 }
