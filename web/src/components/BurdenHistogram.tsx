@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { SEVERITY_COLORS, SEVERITY_ORDER, answerClass } from "@/lib/status";
+import { mss } from "@/lib/playback";
+import { SEVERITY_COLORS, SEVERITY_ORDER, classCounts, recentCount, riskScore } from "@/lib/status";
 
 type Props = {
   probs: number[][];
@@ -20,25 +21,23 @@ const DESCRIPTIONS: Record<string, string> = {
   SZ: "Seizure: a confident seizure call, P(SZ) ≥ 0.9.",
 };
 
-/** Seconds -> "m:ss". */
-const mss = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
-
 // Pattern burden: how many recent model answers fall in each class, from no seizure (left) to
 // seizure (right). Each answer is labeled with the light's per-answer rule (answerClass). The span
 // is the last 3 min, all the EEG a bed has; until the clip has played once, it is the time since
 // the clip's start. Bar heights use a fixed scale (the answers in 3 min), so the bars grow as the
-// clip plays.
+// clip plays. The demo risk score (riskScore) comes from the same counts.
 export function BurdenHistogram({ probs, classes, k, looped, stepS, clipS }: Props) {
-  const full = Math.min(probs.length, Math.round(clipS / stepS)); // answers in 3 min
-  const answers = looped ? full : k + 1;
-  const counts = useMemo(() => {
-    const n = Object.fromEntries(SEVERITY_ORDER.map((c) => [c, 0]));
-    for (const p of probs.slice(0, answers)) n[answerClass(p, classes)]++;
-    return SEVERITY_ORDER.map((c) => n[c]);
-  }, [probs, classes, answers]);
+  const full = recentCount(probs.length, 0, true, clipS, stepS); // answers in 3 min
+  const answers = recentCount(probs.length, k, looped, clipS, stepS);
+  const counts = useMemo(() => classCounts(probs, classes, answers), [probs, classes, answers]);
 
   return (
     <figure className="card burden">
+      <div className="risk-score">
+        <span>Risk score</span>
+        <b>{riskScore(counts)}</b>
+        <span>/ 100</span>
+      </div>
       <figcaption>
         <b>Pattern burden</b>
         <span>
