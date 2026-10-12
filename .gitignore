@@ -2,3 +2,4 @@
 models/
 data/
 web/public/eeg/
+__pycache__/

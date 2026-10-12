@@ -4,13 +4,14 @@ Usage:
   build_beds.py CHBMIT_DIR --files                # print the chosen EDF per patient (args for fetch_chbmit.py)
   build_beds.py CHBMIT_DIR MODEL_PT OUT_DIR       # write OUT_DIR/<case>.i16 and OUT_DIR/manifest.json
 
-One path from raw EEG to both outputs, so the wall shows exactly what the model sees:
-  raw EDF -> SPaRCNet's 16 bipolar channels, in its order -> resample to 200 Hz
-          -> 60 Hz notch + 0.5-40 Hz bandpass -> (a) the 3-minute display clip, int16 uV
-                                                 (b) SPaRCNet: 6 class probabilities every 2 s
+One path from raw EEG to both outputs, so the wall shows what the model sees:
+  raw EDF -> 18 bipolar channels: SPaRCNet's 16, in its order, then Fz-Cz and Cz-Pz
+          -> resample to 200 Hz -> 60 Hz notch + 0.5-40 Hz bandpass
+          -> (a) the 3-minute display clip, all 18 channels, int16 uV
+             (b) SPaRCNet on its 16 channels: 6 class probabilities every 2 s
 Prediction k covers clip time [2k - 10, 2k) s, so each clip is read with 10 s of history.
 
-Each patient's file is the first recording that has the 16 channels and a seizure that
+Each patient's file is the first recording that has the 18 channels and a seizure that
 starts at least CLIP_S into the file. All clips play together; each patient's seizure
 starts at a different moment of the clip (ONSETS).
 """
@@ -30,10 +31,12 @@ import sparcnet  # noqa: E402
 # chb21 is chb01 recorded 1.5 years later, so it is not a separate patient.
 CASES = [f"chb{i:02d}" for i in range(1, 25) if i != 21]
 # SPaRCNet's channels in its input order, with modern names (T7 = T3, P7 = T5, T8 = T4, P8 = T6).
-CHANNELS = [
+MODEL_CHANNELS = [
     "Fp1-F7", "F7-T7", "T7-P7", "P7-O1", "Fp2-F8", "F8-T8", "T8-P8", "P8-O2",
     "Fp1-F3", "F3-C3", "C3-P3", "P3-O1", "Fp2-F4", "F4-C4", "C4-P4", "P4-O2",
 ]
+# The midline chain: not a model input, but part of the standard display.
+CHANNELS = MODEL_CHANNELS + ["Fz-Cz", "Cz-Pz"]
 CLIP_S = 180
 CONTEXT_S = sparcnet.WIN // sparcnet.FS  # history for the first prediction
 STEP_S = sparcnet.STEP // sparcnet.FS
@@ -43,7 +46,10 @@ ONSETS = np.random.default_rng(0).permutation(np.linspace(15, 165, len(CASES)).r
 
 
 def parse_summary(path):
-    """-> list of (file, channels, [[start_s, end_s], ...]) in summary order."""
+    """-> list of (file, channels, [[start_s, end_s], ...], clock_s) in summary order.
+
+    clock_s is the file's start time in seconds after midnight, or None if not listed.
+    """
     files, chans = [], []
     for line in open(path):
         line = line.strip()
@@ -52,7 +58,10 @@ def parse_summary(path):
         elif m := re.match(r"Channel \d+: (\S+)", line):
             chans.append(m.group(1))
         elif line.startswith("File Name:"):
-            files.append((line.split()[-1], list(chans), []))
+            files.append((line.split()[-1], list(chans), [], None))
+        elif m := re.match(r"File Start Time:\s*(\d+):(\d+):(\d+)", line):
+            h, mi, sec = map(int, m.groups())
+            files[-1] = files[-1][:3] + (h * 3600 + mi * 60 + sec,)
         elif m := re.match(r"Seizure(?: \d+)? Start Time:\s*(\d+)", line):
             files[-1][2].append([int(m.group(1)), None])
         elif m := re.match(r"Seizure(?: \d+)? End Time:\s*(\d+)", line):
@@ -61,12 +70,12 @@ def parse_summary(path):
 
 
 def pick(src, case):
-    """-> (file, seizure [start_s, end_s]) for one patient."""
-    for name, chans, seizures in parse_summary(os.path.join(src, f"{case}-summary.txt")):
+    """-> (file, seizure [start_s, end_s], clock_s) for one patient."""
+    for name, chans, seizures, clock_s in parse_summary(os.path.join(src, f"{case}-summary.txt")):
         if all(c.upper() in chans for c in CHANNELS):
             for sz in seizures:
                 if sz[0] >= CLIP_S:
-                    return name, sz
+                    return name, sz, clock_s
     raise ValueError(f"{case}: no usable seizure file")
 
 
@@ -81,7 +90,7 @@ def subject_info(src):
 
 
 def segment(raw, t0, t1):
-    """Raw EDF -> model-ready EEG (16, n) in uV at 200 Hz, for file seconds [t0, t1)."""
+    """Raw EDF -> filtered EEG (18, n) in uV at 200 Hz, for file seconds [t0, t1)."""
     fs_in = int(raw.info["sfreq"])
     # MNE renames duplicate channels, e.g. T8-P8 -> T8-P8-0, T8-P8-1.
     names = [next(n for n in raw.ch_names if n == c.upper() or n.startswith(c.upper() + "-")) for c in CHANNELS]
@@ -100,7 +109,7 @@ def main():
     src = sys.argv[1]
     picks = {case: pick(src, case) for case in CASES}
     if sys.argv[2] == "--files":
-        print(" ".join(f"{case}/{name}" for case, (name, _) in picks.items()))
+        print(" ".join(f"{case}/{name}" for case, (name, _, _) in picks.items()))
         return
     model_pt, out = sys.argv[2:4]
     model = sparcnet.load_model(model_pt)
@@ -109,12 +118,12 @@ def main():
     beds, inside_all, outside_all = [], [], []
     sz_i = sparcnet.CLASSES.index("SZ")
     print("case   seizure(s)  P(SZ) in: mean max | out: mean max")
-    for (case, (name, (sz_start, sz_end))), onset in zip(picks.items(), ONSETS):
+    for (case, (name, (sz_start, sz_end), clock_s)), onset in zip(picks.items(), ONSETS):
         raw = mne.io.read_raw_edf(os.path.join(src, name), preload=False, verbose="ERROR")
         # If the file ends too soon after the seizure, start earlier.
         start = int(min(sz_start - onset, raw.n_times // raw.info["sfreq"] - CLIP_S))
         x = segment(raw, start - CONTEXT_S, start + CLIP_S)
-        probs = sparcnet.predict(model, x)
+        probs = sparcnet.predict(model, x[: len(MODEL_CHANNELS)])
         clip = x[:, CONTEXT_S * sparcnet.FS :]
         np.clip(np.round(clip), -32768, 32767).astype("<i2").T.tofile(os.path.join(out, f"{case}.i16"))
 
@@ -131,7 +140,8 @@ def main():
             "patient": case,
             "info": info.get(case, ""),
             "recording": name,
-            "start_s": start,
+            "start_s": start,  # clip start, seconds into the recording
+            "clock_start_s": None if clock_s is None else clock_s + start,  # clip start, seconds after midnight
             "seizure": sz,
             "probs": np.round(probs, 3).tolist(),
         })
@@ -144,6 +154,7 @@ def main():
         "fs": sparcnet.FS,
         "clip_s": CLIP_S,
         "channels": CHANNELS,
+        "model_channels": MODEL_CHANNELS,
         "classes": sparcnet.CLASSES,
         "prob_step_s": STEP_S,  # probs[k] covers clip time [k * step - window, k * step)
         "prob_window_s": CONTEXT_S,

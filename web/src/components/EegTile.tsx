@@ -18,7 +18,8 @@ type Props = {
   onOpen: () => void;
 };
 
-// One bed on the wall: the last 10 s of EEG and the model status. Click to open the bed.
+// One bed on the wall: a summary to draw attention (bed number, last 10 s, model status).
+// Click to open the bed, where the full details are.
 export function EegTile({ bed, data, probs, classes, k, t0, fs, nCh, onOpen }: Props) {
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {

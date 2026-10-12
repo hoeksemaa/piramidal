@@ -5,6 +5,9 @@ import { sampleAt } from "@/lib/playback";
 
 const UV_PER_LANE = 200; // each channel lane spans this many microvolts
 const TRACE = "#3a3533"; // trace ink sampled from the Marcy video
+const GRID = "#ebe8e6";
+const MUTED = "#8a8685";
+export const AXIS_H = 20; // CSS px under the lanes for the time axis
 
 type Props = {
   data: Int16Array; // sample-major: nCh values per sample, in uV
@@ -13,11 +16,20 @@ type Props = {
   nCh: number;
   windowS: number; // seconds of EEG across the chart width; the newest sample is at the right edge
   lineWidth?: number; // CSS px
+  axisStartS?: number; // if set, draw a time axis: the time of clip sample 0, in seconds after midnight
+  axisPrefix?: string; // put before each axis label
+};
+
+/** Seconds -> "HH:MM:SS", wrapped to one day. */
+const hms = (s: number) => {
+  const t = ((Math.floor(s) % 86400) + 86400) % 86400;
+  return [Math.floor(t / 3600), Math.floor(t / 60) % 60, t % 60].map((v) => String(v).padStart(2, "0")).join(":");
 };
 
 // Scrolling strip chart: new samples enter at the right edge and move left. Each frame
-// shifts the old pixels left by whole pixels, then draws only the new samples.
-export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75 }: Props) {
+// shifts the old pixels left by whole pixels, then draws only the new samples. The time
+// axis and 1 s gridlines are drawn into the same image, so they scroll with the EEG.
+export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, axisStartS, axisPrefix = "" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -27,11 +39,18 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75 }: Props
     const dpr = window.devicePixelRatio || 1;
     const w = (canvas.width = Math.round(canvas.clientWidth * dpr));
     const h = (canvas.height = Math.round(canvas.clientHeight * dpr));
-    const lane = h / nCh;
+    const axis = axisStartS !== undefined;
+    const axisH = axis ? AXIS_H * dpr : 0;
+    const lanesH = h - axisH;
+    const lane = lanesH / nCh;
     const perWindow = fs * windowS;
     const pps = w / perWindow; // pixels per sample
     // EEG convention: negative is up.
     const yOf = (n: number, c: number) => (c + 0.5) * lane + (data[(n % total) * nCh + c] * lane) / UV_PER_LANE;
+    // Label every 1, 2, 5, or 10 s: the first that leaves at least 80 CSS px between labels.
+    const labelEvery = [1, 2, 5, 10].find((s) => (s * fs * pps) / dpr >= 80) ?? 10;
+    const labelOf = (n: number) => axisPrefix + hms(axisStartS! + (n % total) / fs);
+    const pending: number[] = []; // second marks whose label does not fit whole yet
 
     let last = -1; // newest sample already drawn (-1: none yet)
     let raf = 0;
@@ -50,6 +69,19 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75 }: Props
         // The newest sample sits 2 px inside the right edge, so no part of its stroke is clipped.
         const xOf = (n: number) => w - 2 * dpr - (right - n * pps);
         const from = Math.max(last, target - perWindow - 1, 0); // after a hidden tab, redraw one window
+
+        if (axis) {
+          // Gridline and tick at each new whole second, under this frame's traces.
+          for (let n = Math.ceil((from + 1) / fs) * fs; n <= target; n += fs) {
+            const x = Math.round(xOf(n));
+            ctx.fillStyle = GRID;
+            ctx.fillRect(x, 0, dpr, lanesH);
+            ctx.fillStyle = MUTED;
+            ctx.fillRect(x, lanesH, dpr, 4 * dpr);
+            if ((n / fs) % labelEvery === 0) pending.push(n);
+          }
+        }
+
         ctx.strokeStyle = TRACE;
         ctx.lineWidth = lineWidth * dpr;
         ctx.lineJoin = "round"; // miter joins spike on dense zigzags
@@ -59,6 +91,21 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75 }: Props
           for (let n = from + 1; n <= target; n++) ctx.lineTo(xOf(n), yOf(n, c));
         }
         ctx.stroke();
+
+        if (axis) {
+          // Each label is drawn once, centered on its tick, when it fits whole; then it scrolls.
+          ctx.fillStyle = MUTED;
+          ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          while (pending.length) {
+            const text = labelOf(pending[0]);
+            const x = xOf(pending[0]);
+            if (x + ctx.measureText(text).width / 2 > w - 2 * dpr) break;
+            ctx.fillText(text, x, lanesH + axisH / 2 + 2 * dpr);
+            pending.shift();
+          }
+        }
         last = target;
       }
       raf = requestAnimationFrame(frame);
@@ -66,7 +113,7 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75 }: Props
     raf = requestAnimationFrame(frame);
 
     return () => cancelAnimationFrame(raf);
-  }, [data, t0, fs, nCh, windowS, lineWidth]);
+  }, [data, t0, fs, nCh, windowS, lineWidth, axisStartS, axisPrefix]);
 
   return (
     <div className="plot">

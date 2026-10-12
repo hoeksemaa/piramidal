@@ -145,18 +145,23 @@ body {
   font-weight: 500;
 }
 
-.detail .window {
-  margin-left: auto;
+.name {
+  color: var(--muted);
+}
+
+.detail header .name {
+  font-size: 16px;
 }
 
 .close {
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: var(--muted);
-  font-size: 20px;
+  font-size: 34px;
   line-height: 1;
   cursor: pointer;
 }

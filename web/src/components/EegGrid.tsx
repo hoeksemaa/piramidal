@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { NAMES } from "@/lib/names";
 import { sampleAt } from "@/lib/playback";
 import { BedDetail } from "./BedDetail";
 import { EegTile } from "./EegTile";
 
-type Tile = { file: string; probs: number[][] };
+type Tile = { file: string; probs: number[][]; start_s: number; clock_start_s: number | null };
 type Manifest = { fs: number; channels: string[]; classes: string[]; prob_step_s: number; tiles: Tile[] };
 type Loaded = { manifest: Manifest; clips: Int16Array[]; t0: number };
 
@@ -71,6 +72,7 @@ export function EegGrid() {
       {open !== null && (
         <BedDetail
           bed={open + 1}
+          name={NAMES[open]}
           data={clips[open]}
           probs={manifest.tiles[open].probs}
           classes={manifest.classes}
@@ -78,6 +80,9 @@ export function EegGrid() {
           channels={manifest.channels}
           t0={t0}
           fs={manifest.fs}
+          // Clock time when the dataset lists the recording's start; otherwise time since it started.
+          axisStartS={manifest.tiles[open].clock_start_s ?? manifest.tiles[open].start_s}
+          axisPrefix={manifest.tiles[open].clock_start_s === null ? "+" : ""}
           onClose={close}
         />
       )}
