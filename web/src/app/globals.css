@@ -229,6 +229,21 @@ body {
   outline-offset: 2px;
 }
 
+/* A seizure event on the wall, as on Marcy's: a red border and a small red SEIZURE tag. */
+.tile.seizure {
+  border-color: rgba(229, 72, 77, 0.6);
+  box-shadow: 0 0 0 1px rgba(229, 72, 77, 0.6);
+}
+
+.seizure-flag {
+  margin-left: auto;
+  color: #e5484d;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* One bed opened over the wall. The backdrop takes every click outside the bed. */
 .backdrop {
   position: fixed;
@@ -336,8 +351,9 @@ body {
   transition: background-color 0.3s;
 }
 
-/* Seizure events, in the style of Marcy's onset marker: a light blue band over the EEG that red
-   answers read, a blue line under it, a dot and tag at the onset, and a dashed line at detection. */
+/* Seizure events, in the style of Marcy's onset marker: a light blue band from onset to the end
+   (or to the live edge), a blue line under it, a dot and tag at the onset, and a dashed line at
+   detection. */
 .seizure-marks {
   position: absolute;
   top: 0;
@@ -390,6 +406,19 @@ body {
 
 .seizure-detect-tag {
   right: 4px;
+}
+
+/* The estimated end: shown once the end is known, with its tag just right of the band. */
+.seizure-end {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+}
+
+.seizure-end-tag {
+  left: 4px;
 }
 
 .seizure-dot {

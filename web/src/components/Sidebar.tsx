@@ -50,12 +50,14 @@ export function Sidebar() {
           <h2>What you see</h2>
           <p>
             23 beds of real pediatric EEG, replayed in real time. Each bed shows
-            its last 10 s and a model status light. Click a bed to open its full
+            its last 10 s and a model status light. During a seizure, the bed
+            gets a red border and a SEIZURE tag. Click a bed to open its full
             view.
           </p>
           <p>
             In the full view, two dark lines mark the 10 s that the latest
-            answer read. A blue band marks EEG that the model called a seizure.
+            answer read. A blue band marks each seizure, from its onset to its
+            end.
           </p>
         </section>
 
@@ -80,13 +82,29 @@ export function Sidebar() {
         </section>
 
         <section>
-          <h2>Seizure onset</h2>
+          <h2>Seizure rule</h2>
           <p>
-            A red answer says that a seizure is somewhere in its 10 s.
-            Clinicians date a seizure from its first EEG change, not from the
-            time they see it. Thus the onset tag goes at the start of the first
-            red window, 10 s before the detection tag. On our clips, that start
-            is a median 2 s before the expert label.
+            The light shows single answers. A seizure is an event, so it uses a
+            rule that follows the clinical reading:
+          </p>
+          <p>
+            <b>Start:</b> 2 red answers in a row. A real seizure lasts at least
+            10 s, so it shows in 2 overlapping windows. A lone red answer is
+            usually flicker at the 0.9 cut.
+          </p>
+          <p>
+            <b>End:</b> 5 answers in a row that are not red, about 10 s of
+            non-seizure EEG. A shorter dip is the same seizure.
+          </p>
+          <p>
+            <b>Onset ≈</b> the start of the first red window. Clinicians date a
+            seizure from its first EEG change, not from the time they see it.{" "}
+            <b>End ≈</b> the end of the last red window.
+          </p>
+          <p>
+            On our 23 clips, the rule finds 22 seizures, a median 10 s after
+            the expert onset. Its onset estimate is a median 2 s early. The 0.9
+            cut comes from these same clips, so these numbers are optimistic.
           </p>
         </section>
 

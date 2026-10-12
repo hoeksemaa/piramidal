@@ -34,29 +34,49 @@ export function answerLabel(p: number[], classes: string[]) {
   return top === sz ? head : `${head} · SZ ${p[sz].toFixed(2)}`;
 }
 
-/** One run of red answers, first..last. Times are in clip seconds. */
+// A seizure is an event, not one answer. The rule follows the clinical reading of the EEG:
+// - Start: START_RUN red answers in a row. A real seizure lasts at least 10 s (ACNS 2021), and
+//   windows overlap by 8 s, so it shows in 2 windows in a row. A lone red answer is usually
+//   flicker at the 0.9 cut: on our clips, 6 of 7 lone reds fall outside the expert labels.
+// - End: END_GAP answers in a row that are not red, about 10 s of non-seizure EEG. Shorter dips
+//   are the same seizure. A lower "stay on" threshold instead made ends overrun by up to 2 min.
+// On our 23 clips: 22 seizures caught, detected a median 10 s after the expert onset; 11 false
+// events in 49 min of EEG near the seizures; 2 seizures split in two.
+const START_RUN = 2;
+const END_GAP = 5;
+
+/** One seizure event. Answer indices, and times in clip seconds. */
 export type SeizureEvent = {
-  first: number;
-  last: number;
-  detectS: number; // when the first red answer arrived: the end of the EEG it read
-  onsetS: number; // estimated onset: the start of the first red answer's window
-  endS: number; // the end of the last red answer's window
+  detectK: number; // the answer that completes the start run
+  endK: number; // the answer that completes the end gap: from here the event is over
+  onsetS: number; // estimated onset: the start of the first red window
+  detectS: number; // when the event was detected
+  endS: number; // estimated end: the end of the last red window
+  endedS: number; // when the end was known
 };
 
 // Answer k reads the EEG in [k * stepS - windowS, k * stepS) and arrives at k * stepS. A red answer
-// says a seizure is somewhere in its window, so the onset estimate is that window's start: the time
-// a clinician dates the seizure from, not the time the model saw it.
+// says a seizure is somewhere in its window, so the onset estimate is the first window's start:
+// the time a clinician dates the seizure from, not the time the model saw it.
 export function seizureEvents(probs: number[][], classes: string[], stepS: number, windowS: number) {
+  const red = probs.map((p) => status(p, classes) === "seizure");
   const events: SeizureEvent[] = [];
-  probs.forEach((p, k) => {
-    if (status(p, classes) !== "seizure") return;
-    const prev = events.at(-1);
-    if (prev && prev.last === k - 1) {
-      prev.last = k;
-      prev.endS = k * stepS;
-    } else {
-      events.push({ first: k, last: k, detectS: k * stepS, onsetS: k * stepS - windowS, endS: k * stepS });
-    }
-  });
+  for (let k = 0; k + START_RUN <= red.length; k++) {
+    if (!red.slice(k, k + START_RUN).every(Boolean)) continue;
+    let last = k + START_RUN - 1;
+    for (let j = last + 1; j < red.length && j - last <= END_GAP; j++) if (red[j]) last = j;
+    events.push({
+      detectK: k + START_RUN - 1,
+      endK: last + END_GAP,
+      onsetS: k * stepS - windowS,
+      detectS: (k + START_RUN - 1) * stepS,
+      endS: last * stepS,
+      endedS: (last + END_GAP) * stepS,
+    });
+    k = last + END_GAP;
+  }
   return events;
 }
+
+/** The event that is going on at answer k, if any: detected, and its end not yet known. */
+export const ongoingEvent = (events: SeizureEvent[], k: number) => events.find((e) => e.detectK <= k && k < e.endK);

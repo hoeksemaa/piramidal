@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { hms } from "@/lib/playback";
-import { SEVERITY_COLORS, answerLabel, seizureEvents, severity } from "@/lib/status";
+import { SEVERITY_COLORS, answerLabel, ongoingEvent, severity, type SeizureEvent } from "@/lib/status";
 import { AXIS_H, EegChart } from "./EegChart";
 import { ModelWindow, STRIP_H } from "./ModelWindow";
 import { SeizureMarks } from "./SeizureMarks";
@@ -17,6 +17,7 @@ type Props = {
   data: Int16Array;
   probs: number[][];
   classes: string[];
+  events: SeizureEvent[];
   k: number;
   stepS: number;
   probWindowS: number;
@@ -30,15 +31,14 @@ type Props = {
 
 // One bed, opened over the wall: the last 20 s of EEG with channel names, a time axis, the
 // latest model answer's 10 s window, and seizure events (onset and detection), still live.
-export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, probWindowS, channels, t0, fs, axisStartS, axisPrefix, onClose }: Props) {
+export function BedDetail({ bed, name, info, data, probs, classes, events, k, stepS, probWindowS, channels, t0, fs, axisStartS, axisPrefix, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const events = useMemo(() => seizureEvents(probs, classes, stepS, probWindowS), [probs, classes, stepS, probWindowS]);
-  const ongoing = events.find((e) => e.first <= k && k <= e.last);
+  const ongoing = ongoingEvent(events, k);
   const clock = (s: number) => axisPrefix + hms(axisStartS + s);
 
   // The backdrop covers the wall: it blocks every click behind it, and a click on it closes the bed.
@@ -89,7 +89,6 @@ export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, pro
               fs={fs}
               windowS={WINDOW_S}
               clipS={data.length / channels.length / fs}
-              stepS={stepS}
               axisStartS={axisStartS}
               axisPrefix={axisPrefix}
             />

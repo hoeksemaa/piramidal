@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { NAMES } from "@/lib/names";
 import { sampleAt } from "@/lib/playback";
+import { ongoingEvent, seizureEvents } from "@/lib/status";
 import { BedDetail } from "./BedDetail";
 import { EegTile } from "./EegTile";
 
@@ -54,6 +55,15 @@ export function EegGrid() {
     return () => cancelAnimationFrame(raf);
   }, [loaded]);
 
+  // Each bed's seizure events, from its model answers.
+  const events = useMemo(
+    () =>
+      loaded?.manifest.tiles.map((t) =>
+        seizureEvents(t.probs, loaded.manifest.classes, loaded.manifest.prob_step_s, loaded.manifest.prob_window_s),
+      ) ?? [],
+    [loaded],
+  );
+
   if (error) return <p className="status">No EEG data. Run scripts/build_beds.py first.</p>;
   if (!loaded) return <p className="status">Loading recordings…</p>;
 
@@ -69,6 +79,7 @@ export function EegGrid() {
             probs={t.probs}
             classes={manifest.classes}
             k={k}
+            seizure={ongoingEvent(events[i], k) !== undefined}
             t0={t0}
             fs={manifest.fs}
             nCh={manifest.channels.length}
@@ -84,6 +95,7 @@ export function EegGrid() {
           data={clips[open]}
           probs={manifest.tiles[open].probs}
           classes={manifest.classes}
+          events={events[open]}
           k={k}
           stepS={manifest.prob_step_s}
           probWindowS={manifest.prob_window_s}
