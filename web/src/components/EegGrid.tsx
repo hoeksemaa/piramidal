@@ -6,7 +6,7 @@ import { sampleAt } from "@/lib/playback";
 import { BedDetail } from "./BedDetail";
 import { EegTile } from "./EegTile";
 
-type Tile = { file: string; probs: number[][]; start_s: number; clock_start_s: number | null };
+type Tile = { file: string; info: string; probs: number[][]; start_s: number; clock_start_s: number | null };
 type Manifest = { fs: number; channels: string[]; classes: string[]; prob_step_s: number; tiles: Tile[] };
 type Loaded = { manifest: Manifest; clips: Int16Array[]; t0: number };
 
@@ -73,6 +73,7 @@ export function EegGrid() {
         <BedDetail
           bed={open + 1}
           name={NAMES[open]}
+          info={manifest.tiles[open].info}
           data={clips[open]}
           probs={manifest.tiles[open].probs}
           classes={manifest.classes}
