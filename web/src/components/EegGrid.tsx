@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NAMES } from "@/lib/names";
-import { sampleAt } from "@/lib/playback";
-import { bedStatus, seizureEvents } from "@/lib/status";
+import { mss, sampleAt } from "@/lib/playback";
+import { bedStatus, classCounts, recentCount, riskScore, seizureEvents, statusWord } from "@/lib/status";
 import { BedDetail } from "./BedDetail";
 import { EegTile } from "./EegTile";
+import { RiskPanel, type RiskRow } from "./RiskPanel";
 
 type Tile = { file: string; info: string; recording: string; probs: number[][]; start_s: number; clock_start_s: number | null };
 type Manifest = {
@@ -72,26 +73,44 @@ export function EegGrid() {
   if (!loaded) return <p className="status">Loading recordings…</p>;
 
   const { manifest, clips, t0 } = loaded;
+  const { classes, prob_step_s: stepS } = manifest;
+  const clipS = clips[0].length / manifest.channels.length / manifest.fs;
+  const statuses = manifest.tiles.map((t, i) => bedStatus(events[i], t.probs[k], k, classes));
+  // Every bed, ranked: beds in a seizure first, then by risk score (ties: lower bed number first).
+  const recent = recentCount(manifest.tiles[0].probs.length, k, looped, clipS, stepS);
+  const rows: RiskRow[] = manifest.tiles
+    .map((t, i) => ({
+      bed: i + 1,
+      name: NAMES[i],
+      status: statuses[i],
+      ...statusWord(statuses[i], t.probs[k], classes),
+      score: riskScore(classCounts(t.probs, classes, recent)),
+    }))
+    .sort((a, b) => +(b.status === "seizure") - +(a.status === "seizure") || b.score - a.score || a.bed - b.bed);
+
   return (
     <>
-      <main className="grid">
-        {manifest.tiles.map((t, i) => (
-          <EegTile
-            key={t.file}
-            bed={i + 1}
-            name={NAMES[i]}
-            data={clips[i]}
-            probs={t.probs}
-            classes={manifest.classes}
-            k={k}
-            status={bedStatus(events[i], t.probs[k], k, manifest.classes)}
-            t0={t0}
-            fs={manifest.fs}
-            nCh={manifest.channels.length}
-            onOpen={() => setOpen(i)}
-          />
-        ))}
-      </main>
+      <div className="wall">
+        <main className="grid">
+          {manifest.tiles.map((t, i) => (
+            <EegTile
+              key={t.file}
+              bed={i + 1}
+              name={NAMES[i]}
+              data={clips[i]}
+              probs={t.probs}
+              classes={manifest.classes}
+              k={k}
+              status={statuses[i]}
+              t0={t0}
+              fs={manifest.fs}
+              nCh={manifest.channels.length}
+              onOpen={() => setOpen(i)}
+            />
+          ))}
+        </main>
+        <RiskPanel rows={rows} span={mss(recent * stepS)} onOpen={(bed) => setOpen(bed - 1)} />
+      </div>
       {open !== null && (
         <BedDetail
           bed={open + 1}

@@ -55,6 +55,11 @@ export function Sidebar() {
             Click a bed to open its full view.
           </p>
           <p>
+            On the right, the risk ranking lists every bed, live: beds in a
+            seizure first, flashing red, then the rest by risk score. Click a
+            row to open that bed.
+          </p>
+          <p>
             In the full view, two dark lines mark the 10 s that the latest
             answer read. A blue band marks each seizure, from its onset to its
             end. On the right are three cards: the patient, the status now in
@@ -113,6 +118,21 @@ export function Sidebar() {
             On the 23 random clips here, it finds all 3 labeled seizures. But
             it also makes 13 false events in 60 min of seizure-free EEG. The
             model was trained on adult ICU EEG, not on these children.
+          </p>
+        </section>
+
+        <section>
+          <h2>Risk score</h2>
+          <p>
+            A simple demo score, from 0 to 100. Each model answer of the last 3
+            min scores its severity: Other 0, GRDA 1, GPD 2, LRDA 3, LPD 4, SZ
+            5. The risk score is the mean, scaled to 0–100.
+          </p>
+          <p>
+            <b>Not a clinical score.</b> This demo has no data to test or
+            calibrate a risk score. With ICU EEG, expert labels, and patient
+            outcomes, a validated score is possible, such as 2HELPS2B, which
+            gives a patient&apos;s seizure risk for the next 72 h.
           </p>
         </section>
 

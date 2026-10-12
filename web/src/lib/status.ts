@@ -107,3 +107,33 @@ export function bedStatus(events: SeizureEvent[], p: number[], k: number, classe
   if (ongoingEvent(events, k)) return "seizure";
   return answerStatus(p, classes) === "ok" ? "ok" : "pattern";
 }
+
+/** How many answers the last 3 min hold: the whole clip once it has played through, else 0..k. */
+export const recentCount = (nAnswers: number, k: number, looped: boolean, clipS: number, stepS: number) =>
+  looped ? Math.min(nAnswers, Math.round(clipS / stepS)) : k + 1;
+
+/** How many of the first n answers fall in each class, in SEVERITY_ORDER. */
+export function classCounts(probs: number[][], classes: string[], n: number) {
+  const counts = SEVERITY_ORDER.map(() => 0);
+  for (const p of probs.slice(0, n)) counts[LEVEL[answerClass(p, classes)] - 1]++;
+  return counts;
+}
+
+// A simple demo risk score, 0-100, not a clinical one: each answer scores its severity, from
+// Other 0 to SZ 5 (Other 0, GRDA 1, GPD 2, LRDA 3, LPD 4, SZ 5), and the score is their mean over
+// the last 3 min, scaled to 0-100. All SZ is 100; all Other is 0. A validated score (such as
+// 2HELPS2B) needs data that this demo does not have: ICU EEG with expert labels and outcomes.
+export function riskScore(counts: number[]) {
+  const n = counts.reduce((a, b) => a + b, 0);
+  const sum = counts.reduce((s, c, i) => s + c * i, 0);
+  return n ? Math.round((100 * sum) / ((counts.length - 1) * n)) : 0;
+}
+
+/** The status in one word and its color: Seizure, Possible seizure, Healthy, or the IIC pattern. */
+export function statusWord(status: Status, p: number[], classes: string[]) {
+  const cls = answerClass(p, classes);
+  if (status === "seizure") return { word: "Seizure", color: "#e5484d", dark: false };
+  if (cls === "SZ") return { word: "Possible seizure", color: classColor("GRDA"), dark: true };
+  if (cls === "Other") return { word: "Healthy", color: classColor("Other"), dark: false };
+  return { word: cls, color: classColor(cls), dark: LEVEL[cls] <= LEVEL.GPD }; // dark text on yellow
+}
