@@ -11,6 +11,7 @@ html,
 body {
   margin: 0;
   height: 100%;
+  overflow: hidden; /* the wall fills the window; the page never scrolls */
   background: var(--page);
   color: var(--muted);
   font: 12px system-ui, sans-serif;
