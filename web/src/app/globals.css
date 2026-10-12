@@ -313,9 +313,8 @@ body {
   padding-bottom: 10px;
 }
 
-.detail header b {
+.detail header .latest {
   color: var(--text);
-  font-size: 16px;
   font-weight: 500;
 }
 
@@ -326,15 +325,20 @@ body {
   min-width: 0;
 }
 
-/* Three cards, top to bottom: the patient, the status now, and the pattern burden. */
+/* Three cards of equal height that fill the right quarter, top to bottom: the patient, the status
+   now, and the pattern burden. The close button sits in the top card's corner. */
 .detail-side {
   display: flex;
   flex: 1;
   flex-direction: column;
   gap: 12px;
   min-width: 0;
-  padding-top: 52px; /* room for the close button */
   overflow-y: auto;
+}
+
+.detail-side .card {
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 .card {
@@ -349,6 +353,7 @@ body {
 .patient {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
   text-align: center;
 }
@@ -357,10 +362,10 @@ body {
 .status-card {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
   gap: 4px;
-  padding: 18px 16px;
-  border: 0;
+  border-color: transparent; /* same box as the other cards, so all three are the same height */
   text-align: center;
   transition: background-color 0.3s;
 }
@@ -377,7 +382,6 @@ body {
 }
 
 .status-card.seizure {
-  padding: 28px 16px;
   animation: seizure-card 0.3s ease-in-out infinite alternate;
 }
 
@@ -400,6 +404,14 @@ body {
   .status-card.seizure {
     animation: none;
   }
+}
+
+.patient-bed {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .patient h2 {
@@ -429,7 +441,8 @@ body {
 
 /* Pattern burden: one bar per class, from no seizure (left) to seizure (right), as a count of answers. */
 .burden {
-  padding-bottom: 18px;
+  display: flex;
+  flex-direction: column;
 }
 
 .burden figcaption {
@@ -446,9 +459,10 @@ body {
 
 .burden-bars {
   display: grid;
+  flex: 1;
   grid-template-columns: repeat(6, 1fr);
   gap: 6px;
-  height: 160px;
+  min-height: 60px;
   margin-top: 22px;
   border-bottom: 1px solid #cfcac6;
 }
@@ -487,8 +501,8 @@ body {
   text-align: center;
 }
 
-/* A class name: hover (or tab to it) for a short description, shown under the whole row so it
-   never runs past the panel's edges. */
+/* A class name: hover (or tab to it) for a short description, shown over the bars across the
+   whole row, so it never runs past the panel's edges. */
 .burden-label {
   justify-self: center;
   cursor: help;
@@ -505,7 +519,7 @@ body {
 .burden-tip {
   display: none;
   position: absolute;
-  top: calc(100% + 8px);
+  bottom: calc(100% + 8px);
   left: 0;
   right: 0;
   z-index: 1;
@@ -526,8 +540,8 @@ body {
 
 .close {
   position: absolute;
-  top: 6px;
-  right: 8px;
+  top: 14px;
+  right: 18px;
   width: 44px;
   height: 44px;
   border: 0;

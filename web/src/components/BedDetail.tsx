@@ -8,7 +8,6 @@ import { AXIS_H, EegChart } from "./EegChart";
 import { ModelWindow, STRIP_H } from "./ModelWindow";
 import { SeizureMarks } from "./SeizureMarks";
 import { StatusCard } from "./StatusCard";
-import { StatusLight } from "./StatusLight";
 
 const WINDOW_S = 20;
 
@@ -54,8 +53,7 @@ export function BedDetail({ bed, name, info, recording, data, probs, classes, ev
       <section className="detail" role="dialog" aria-modal="true" aria-label={`Bed ${bed}, ${name}`} onClick={(e) => e.stopPropagation()}>
         <div className="detail-main">
           <header>
-            <b>Bed {bed}</b>
-            <StatusLight status={status} answer={probs[k]} classes={classes} />
+            <span className="latest">Latest answer</span>
             <span>{answerLabel(probs[k], classes)}</span>
           </header>
           <div className="detail-body">
@@ -103,11 +101,10 @@ export function BedDetail({ bed, name, info, recording, data, probs, classes, ev
         </div>
         <aside className="detail-side">
           <section className="card patient">
+            <span className="patient-bed">Bed {bed}</span>
             <h2>{name}</h2>
             <p>{info || "sex and age not listed"}</p>
             <dl>
-              <dt>Bed</dt>
-              <dd>{bed}</dd>
               <dt>Recording</dt>
               <dd>{recording}</dd>
               <dt>Clip start</dt>
