@@ -1,32 +1,76 @@
-"""Cut 20 five-minute EEG tiles from the CHB-MIT recordings for the web grid.
+"""Cut one EEG clip per CHB-MIT patient for the web grid (23 patients, one cell each).
 
-Usage: make_tiles.py CHBMIT_DIR OUT_DIR
-Writes OUT_DIR/tileNN.i16 (int16 uV, sample-major, 18 channels) and OUT_DIR/manifest.json.
-Filters: 60 Hz notch, 0.5-40 Hz bandpass. Keeps the native 256 Hz sample rate.
+Usage:
+  make_tiles.py CHBMIT_DIR --files    # print the chosen EDF per patient (args for fetch_chbmit.py)
+  make_tiles.py CHBMIT_DIR OUT_DIR    # write OUT_DIR/<case>.i16 and OUT_DIR/manifest.json
+
+Each patient's file is the first recording that has the 18 standard channels and a
+seizure that starts at least CLIP_S into the file. All clips are CLIP_S long and play
+together; each patient's seizure starts at a different moment of the clip (ONSETS).
+Clips are filtered (60 Hz notch, 0.5-40 Hz bandpass), int16 uV, sample-major, at the
+native 256 Hz.
 """
 import json
 import os
+import re
 import sys
 
-import mne
 import numpy as np
 
+# chb21 is chb01 recorded 1.5 years later, so it is not a separate patient.
+CASES = [f"chb{i:02d}" for i in range(1, 25) if i != 21]
 # Standard double banana, as CHB-MIT names it.
 CHANNELS = [
     "FP1-F7", "F7-T7", "T7-P7", "P7-O1", "FP1-F3", "F3-C3", "C3-P3", "P3-O1",
     "FP2-F4", "F4-C4", "C4-P4", "P4-O2", "FP2-F8", "F8-T8", "T8-P8", "P8-O2",
     "FZ-CZ", "CZ-PZ",
 ]
-# Recording -> first seizure start (s), from the chbNN-summary.txt files.
-SEIZURE_START = {
-    "chb01_18": 1720, "chb03_03": 432, "chb07_13": 3285,
-    "chb15_22": 760, "chb18_35": 2196, "chb19_29": 2964,
-}
-N_TILES = 20
-TILE_S = 300
+CLIP_S = 180
+# Seizure onset in each clip (s): spread over 15-165 s, in a fixed shuffled order.
+ONSETS = np.random.default_rng(0).permutation(np.linspace(15, 165, len(CASES)).round().astype(int))
+
+
+def subject_info(src):
+    """-> {case: "F, 11 y"} from SUBJECT-INFO (chb24 is not listed)."""
+    info = {}
+    for line in open(os.path.join(src, "SUBJECT-INFO")):
+        parts = line.split()
+        if len(parts) == 3 and parts[0].startswith("chb"):
+            info[parts[0]] = f"{parts[1]}, {parts[2]} y"
+    return info
+
+
+def parse_summary(path):
+    """-> list of (file, channels, [[start_s, end_s], ...]) in summary order."""
+    files, chans = [], []
+    for line in open(path):
+        line = line.strip()
+        if line.startswith(("Channels in EDF", "Channels changed")):
+            chans = []
+        elif m := re.match(r"Channel \d+: (\S+)", line):
+            chans.append(m.group(1))
+        elif line.startswith("File Name:"):
+            files.append((line.split()[-1], list(chans), []))
+        elif m := re.match(r"Seizure(?: \d+)? Start Time:\s*(\d+)", line):
+            files[-1][2].append([int(m.group(1)), None])
+        elif m := re.match(r"Seizure(?: \d+)? End Time:\s*(\d+)", line):
+            files[-1][2][-1][1] = int(m.group(1))
+    return files
+
+
+def pick(src, case):
+    """-> (file, seizure [start_s, end_s]) for one patient."""
+    for name, chans, seizures in parse_summary(os.path.join(src, f"{case}-summary.txt")):
+        if all(c in chans for c in CHANNELS):
+            for sz in seizures:
+                if sz[0] >= CLIP_S:
+                    return name, sz
+    raise ValueError(f"{case}: no usable seizure file")
 
 
 def load(path):
+    import mne
+
     raw = mne.io.read_raw_edf(path, preload=True, verbose="ERROR")
     # MNE renames duplicate channels, e.g. T8-P8 -> T8-P8-0, T8-P8-1.
     picks = [next(n for n in raw.ch_names if n == c or n.startswith(c + "-")) for c in CHANNELS]
@@ -37,30 +81,33 @@ def load(path):
     return x, int(fs)
 
 
-def tile_starts(n_samples, fs, seizure_s, count):
-    """First tile starts 30 s before the seizure; the rest are spread over seizure-free time."""
-    sz = seizure_s - 30
-    free = [s for s in range(0, n_samples // fs - TILE_S, TILE_S) if abs(s - sz) >= TILE_S]
-    return [sz] + [free[(k * len(free)) // count] for k in range(1, count)]
-
-
 def main():
     src, out = sys.argv[1:3]
+    picks = {case: pick(src, case) for case in CASES}
+    if out == "--files":
+        print(" ".join(f"{case}/{name}" for case, (name, _) in picks.items()))
+        return
     os.makedirs(out, exist_ok=True)
-    recs = list(SEIZURE_START)
-    per_rec = [N_TILES // len(recs) + (i < N_TILES % len(recs)) for i in range(len(recs))]
+    info = subject_info(src)
     tiles = []
-    for rec, count in zip(recs, per_rec):
-        x, fs = load(os.path.join(src, rec + ".edf"))
-        for start in tile_starts(x.shape[1], fs, SEIZURE_START[rec], count):
-            seg = x[:, start * fs : (start + TILE_S) * fs]
-            name = f"tile{len(tiles):02d}.i16"
-            data = np.clip(np.round(seg), -32768, 32767).astype("<i2").T  # (samples, channels)
-            data.tofile(os.path.join(out, name))
-            tiles.append({"file": name, "label": f"{rec} @ {start} s"})
-            print(f"{name}  {rec}  {start}-{start + TILE_S} s")
+    for (case, (name, (sz_start, sz_end))), onset in zip(picks.items(), ONSETS):
+        x, fs = load(os.path.join(src, name))
+        # If the file ends too soon after the seizure, start earlier.
+        start = min(sz_start - int(onset), x.shape[1] // fs - CLIP_S)
+        clip = x[:, start * fs : (start + CLIP_S) * fs]
+        np.clip(np.round(clip), -32768, 32767).astype("<i2").T.tofile(os.path.join(out, f"{case}.i16"))
+        tiles.append({
+            "file": f"{case}.i16",
+            "patient": case,
+            "info": info.get(case, ""),
+            "recording": name,
+            "start_s": start,
+            "seizure": [sz_start - start, sz_end - start],  # seconds into the clip
+        })
+        print(f"{case}  {name}  clip {start}-{start + CLIP_S} s  seizure at {sz_start - start}-{sz_end - start} s")
     manifest = {
         "fs": fs,
+        "clip_s": CLIP_S,
         "channels": CHANNELS,
         "source": "CHB-MIT Scalp EEG Database (PhysioNet), ODC-By 1.0",
         "tiles": tiles,

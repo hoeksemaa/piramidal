@@ -6,17 +6,19 @@ Usage:
 """
 import os
 import sys
+import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-BASE = "https://physionet.org/files/chbmit/1.0.0/"
+# PhysioNet's AWS open-data mirror: the same files, about 70x faster than physionet.org.
+BASE = "https://physionet-open.s3.amazonaws.com/chbmit/1.0.0/"
 
 
 def fetch(dest, rel):
     out = os.path.join(dest, os.path.basename(rel))
     if os.path.exists(out):
         return f"have {rel}"
-    urllib.request.urlretrieve(BASE + rel, out + ".part")
+    urllib.request.urlretrieve(BASE + urllib.parse.quote(rel), out + ".part")
     os.replace(out + ".part", out)
     return f"got  {rel} ({os.path.getsize(out) / 1e6:.0f} MB)"
 
