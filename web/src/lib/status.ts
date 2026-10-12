@@ -1,4 +1,5 @@
-// A confident seizure call needs P(SZ) >= 0.9: on our 23 clips, a plain top-class SZ call is
+// The numbers below come from the 23 test clips, one seizure each (build_beds.py --seizure).
+// A confident seizure call needs P(SZ) >= 0.9: on the test clips, a plain top-class SZ call is
 // 67% of non-seizure answers; P >= 0.9 is 9.5% of them, and still shows in 22 of 23 seizures.
 const RED_P = 0.9;
 
@@ -16,7 +17,7 @@ const argmax = (p: number[]) => p.indexOf(Math.max(...p));
 export function severity(p: number[], classes: string[]) {
   if (p[classes.indexOf("SZ")] >= RED_P) return LEVEL.SZ;
   const top = classes[argmax(p)];
-  // A seizure call below RED_P counts as Other: on our clips, 60% of non-seizure answers are one.
+  // A seizure call below RED_P counts as Other: on the test clips, 60% of non-seizure answers are one.
   return top === "SZ" ? LEVEL.Other : LEVEL[top];
 }
 
@@ -38,11 +39,12 @@ export function answerLabel(p: number[], classes: string[]) {
 // A seizure is an event, not one answer. The rule follows the clinical reading of the EEG:
 // - Start: START_RUN red answers in a row. A real seizure lasts at least 10 s (ACNS 2021), and
 //   windows overlap by 8 s, so it shows in 2 windows in a row. A lone red answer is usually
-//   flicker at the 0.9 cut: on our clips, 6 of 7 lone reds fall outside the expert labels.
+//   flicker at the 0.9 cut: on the test clips, 6 of 7 lone reds fall outside the expert labels.
 // - End: END_GAP answers in a row that are not red, about 10 s of non-seizure EEG. Shorter dips
 //   are the same seizure. A lower "stay on" threshold instead made ends overrun by up to 2 min.
-// On our 23 clips: 22 seizures caught, detected a median 10 s after the expert onset; 11 false
-// events in 49 min of EEG near the seizures; 2 seizures split in two.
+// On the 23 test clips: 22 seizures caught, detected a median 10 s after the expert onset; 11 false
+// events in 49 min of EEG near the seizures; 2 seizures split in two. On the 23 random clips of
+// the wall: all 3 labeled seizures caught; 13 false events in 60 min of seizure-free EEG.
 const START_RUN = 2;
 const END_GAP = 5;
 
@@ -85,7 +87,7 @@ export const ongoingEvent = (events: SeizureEvent[], k: number) => events.find((
 // A bed's status light at answer k. Red if and only if a seizure event is going on, so the light
 // always agrees with the SEIZURE tag and the band. Otherwise the light shows the latest answer:
 // yellow for an IIC pattern or a single confident seizure call (not yet a seizure), else green.
-// On our clips, red is 14% of non-seizure answers (1:1 was 9.5%): red holds until the end is known.
+// On the test clips, red is 14% of non-seizure answers (1:1 was 9.5%): red holds until the end is known.
 export function bedStatus(events: SeizureEvent[], p: number[], k: number, classes: string[]): Status {
   if (ongoingEvent(events, k)) return "seizure";
   return answerStatus(p, classes) === "ok" ? "ok" : "pattern";
