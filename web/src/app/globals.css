@@ -41,16 +41,40 @@ body {
 .tile header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 8px;
   padding-bottom: 6px;
   white-space: nowrap;
-  overflow: hidden;
 }
 
 .tile header b {
   color: var(--text);
   font-size: 13px;
   font-weight: 500;
+}
+
+/* Model status per bed: green = Other, yellow = one of the 4 IIC patterns, red = seizure. */
+.light {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-right: 2px;
+  border-radius: 50%;
+}
+
+.light.ok {
+  background: #3fa56b;
+  box-shadow: 0 0 0 3px rgba(63, 165, 107, 0.18);
+}
+
+.light.pattern {
+  background: #e3a21a;
+  box-shadow: 0 0 0 3px rgba(227, 162, 26, 0.2);
+}
+
+.light.seizure {
+  background: #e5484d;
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.22);
 }
 
 .plot {

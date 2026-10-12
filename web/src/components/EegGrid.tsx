@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { EegTile } from "./EegTile";
 
-type Tile = { file: string };
-type Manifest = { fs: number; channels: string[]; tiles: Tile[] };
+type Tile = { file: string; probs: number[][] };
+type Manifest = { fs: number; channels: string[]; classes: string[]; prob_step_s: number; tiles: Tile[] };
 type Loaded = { manifest: Manifest; clips: Int16Array[]; t0: number };
 
 export function EegGrid() {
@@ -22,7 +22,7 @@ export function EegGrid() {
     })().catch(() => setError(true));
   }, []);
 
-  if (error) return <p className="status">No EEG data. Run scripts/make_tiles.py first.</p>;
+  if (error) return <p className="status">No EEG data. Run scripts/build_beds.py first.</p>;
   if (!loaded) return <p className="status">Loading recordings…</p>;
 
   const { manifest, clips, t0 } = loaded;
@@ -33,6 +33,9 @@ export function EegGrid() {
           key={t.file}
           bed={i + 1}
           data={clips[i]}
+          probs={t.probs}
+          classes={manifest.classes}
+          stepS={manifest.prob_step_s}
           t0={t0}
           fs={manifest.fs}
           nCh={manifest.channels.length}
