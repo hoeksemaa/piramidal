@@ -2,22 +2,21 @@
 
 import { useEffect, useRef } from "react";
 
-const SWEEP_S = 10; // seconds of EEG across the tile width
+const WINDOW_S = 10; // seconds of EEG across the tile width; the newest sample is at the right edge
 const UV_PER_LANE = 200; // each channel lane spans this many microvolts
-const GAP_PX = 6; // blank gap ahead of the sweep cursor
+const TRACE = "#3a3533"; // trace ink sampled from the Marcy video
 
 type Props = {
-  patient: string;
-  info: string;
-  recording: string;
+  bed: number; // the bed's ID on the all-beds screen
   data: Int16Array; // sample-major: nCh values per sample, in uV
   t0: number; // performance.now() at clip time 0, shared by all tiles
   fs: number;
   nCh: number;
 };
 
-// Bedside-monitor sweep: each frame draws only the samples that arrived since the last frame.
-export function EegTile({ patient, info, recording, data, t0, fs, nCh }: Props) {
+// Scrolling strip chart: new samples enter at the right edge and move left. Each frame
+// shifts the old pixels left by whole pixels, then draws only the new samples.
+export function EegTile({ bed, data, t0, fs, nCh }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -28,44 +27,36 @@ export function EegTile({ patient, info, recording, data, t0, fs, nCh }: Props) 
     const w = (canvas.width = Math.round(canvas.clientWidth * dpr));
     const h = (canvas.height = Math.round(canvas.clientHeight * dpr));
     const lane = h / nCh;
-    const perSweep = fs * SWEEP_S;
-    const gap = (GAP_PX * dpr * perSweep) / w; // the gap, in samples
-    const xOf = (n: number) => ((n % perSweep) / perSweep) * w;
+    const perWindow = fs * WINDOW_S;
+    const pps = w / perWindow; // pixels per sample
     // EEG convention: negative is up.
     const yOf = (n: number, c: number) => (c + 0.5) * lane + (data[(n % total) * nCh + c] * lane) / UV_PER_LANE;
 
-    // Clear the pixels for samples [a, b), wrapping at the right edge.
-    const erase = (a: number, b: number) => {
-      const xa = Math.floor(xOf(a));
-      const xb = Math.ceil(xOf(b));
-      if (xb >= xa) ctx.clearRect(xa, 0, xb - xa, h);
-      else {
-        ctx.clearRect(xa, 0, w - xa, h);
-        ctx.clearRect(0, 0, xb, h);
-      }
-    };
-
-    ctx.strokeStyle = "#8fd694";
-    ctx.lineWidth = dpr;
-    let last = 0; // newest sample already drawn
+    let last = -1; // newest sample already drawn (-1: none yet)
     let raf = 0;
 
     const frame = (now: number) => {
-      const target = Math.floor(((now - t0) / 1000) * fs);
-      if (target - last >= perSweep) {
-        // The tab was hidden: start a fresh sweep at the current time.
-        ctx.clearRect(0, 0, w, h);
-        last = target;
-      }
+      // Start one window into the clip, so the tile is full on the first frame.
+      const target = perWindow + Math.floor(((now - t0) / 1000) * fs);
       if (target > last) {
-        erase(last + gap, target + gap);
+        const right = Math.floor(target * pps); // the right edge, in absolute pixels
+        const shift = last < 0 ? w : right - Math.floor(last * pps);
+        if (shift > 0) {
+          // "copy" moves the image and leaves the uncovered right columns blank.
+          ctx.globalCompositeOperation = "copy";
+          ctx.drawImage(canvas, -shift, 0);
+          ctx.globalCompositeOperation = "source-over";
+        }
+        // The newest sample sits 2 px inside the right edge, so no part of its stroke is clipped.
+        const xOf = (n: number) => w - 2 * dpr - (right - n * pps);
+        const from = Math.max(last, target - perWindow - 1, 0); // after a hidden tab, redraw one window
+        ctx.strokeStyle = TRACE;
+        ctx.lineWidth = 0.75 * dpr;
+        ctx.lineJoin = "round"; // miter joins spike on dense zigzags
         ctx.beginPath();
         for (let c = 0; c < nCh; c++) {
-          ctx.moveTo(xOf(last), yOf(last, c));
-          for (let n = last + 1; n <= target; n++) {
-            if (n % perSweep === 0) ctx.moveTo(0, yOf(n, c));
-            else ctx.lineTo(xOf(n), yOf(n, c));
-          }
+          ctx.moveTo(xOf(from), yOf(from, c));
+          for (let n = from + 1; n <= target; n++) ctx.lineTo(xOf(n), yOf(n, c));
         }
         ctx.stroke();
         last = target;
@@ -80,10 +71,7 @@ export function EegTile({ patient, info, recording, data, t0, fs, nCh }: Props) 
   return (
     <section className="tile">
       <header>
-        <span>
-          <b>{patient}</b> {info}
-        </span>
-        <span>{recording}</span>
+        <b>Bed {bed}</b>
       </header>
       <div className="plot">
         <canvas ref={canvasRef} />
