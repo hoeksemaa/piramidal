@@ -1,9 +1,9 @@
-import { answerLabel, status } from "@/lib/status";
+import { answerLabel, type Status } from "@/lib/status";
 
-type Props = { answer: number[]; classes: string[] };
+type Props = { status: Status; answer: number[]; classes: string[] };
 
-// Green / yellow / red for one model answer, 1:1. Hover shows the answer.
-export function StatusLight({ answer, classes }: Props) {
-  const label = answerLabel(answer, classes);
-  return <span className={`light ${status(answer, classes)}`} title={label} role="img" aria-label={label} />;
+// Green / yellow / red status for one bed (see bedStatus). Hover shows the latest answer.
+export function StatusLight({ status, answer, classes }: Props) {
+  const label = (status === "seizure" ? "Seizure going on · " : "") + answerLabel(answer, classes);
+  return <span className={`light ${status}`} title={label} role="img" aria-label={label} />;
 }

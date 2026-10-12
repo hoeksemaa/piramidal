@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { hms } from "@/lib/playback";
-import { SEVERITY_COLORS, answerLabel, ongoingEvent, severity, type SeizureEvent } from "@/lib/status";
+import { SEVERITY_COLORS, answerLabel, bedStatus, ongoingEvent, severity, type SeizureEvent } from "@/lib/status";
 import { AXIS_H, EegChart } from "./EegChart";
 import { ModelWindow, STRIP_H } from "./ModelWindow";
 import { SeizureMarks } from "./SeizureMarks";
@@ -49,7 +49,7 @@ export function BedDetail({ bed, name, info, data, probs, classes, events, k, st
           <b>Bed {bed}</b>
           <span className="name">{name}</span>
           <span>{info || "sex and age not listed"}</span>
-          <StatusLight answer={probs[k]} classes={classes} />
+          <StatusLight status={bedStatus(events, probs[k], k, classes)} answer={probs[k]} classes={classes} />
           <span>{answerLabel(probs[k], classes)}</span>
           {ongoing && (
             <span className="seizure-now">

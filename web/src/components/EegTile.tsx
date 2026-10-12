@@ -1,6 +1,7 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
+import type { Status } from "@/lib/status";
 import { EegChart } from "./EegChart";
 import { StatusLight } from "./StatusLight";
 
@@ -12,7 +13,7 @@ type Props = {
   probs: number[][];
   classes: string[];
   k: number; // index of the latest model answer
-  seizure: boolean; // a seizure event is going on
+  status: Status; // the bed status: red if and only if a seizure event is going on
   t0: number;
   fs: number;
   nCh: number;
@@ -21,7 +22,8 @@ type Props = {
 
 // One bed on the wall: a summary to draw attention (bed number, last 10 s, model status). During a
 // seizure event, a red border and a SEIZURE tag, as on Marcy's wall. Click to open the bed.
-export function EegTile({ bed, data, probs, classes, k, seizure, t0, fs, nCh, onOpen }: Props) {
+export function EegTile({ bed, data, probs, classes, k, status, t0, fs, nCh, onOpen }: Props) {
+  const seizure = status === "seizure";
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -40,7 +42,7 @@ export function EegTile({ bed, data, probs, classes, k, seizure, t0, fs, nCh, on
       <header>
         <b>Bed {bed}</b>
         {seizure && <span className="seizure-flag">Seizure</span>}
-        <StatusLight answer={probs[k]} classes={classes} />
+        <StatusLight status={status} answer={probs[k]} classes={classes} />
       </header>
       <EegChart data={data} t0={t0} fs={fs} nCh={nCh} windowS={WINDOW_S} />
     </section>

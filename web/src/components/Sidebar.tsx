@@ -50,9 +50,9 @@ export function Sidebar() {
           <h2>What you see</h2>
           <p>
             23 beds of real pediatric EEG, replayed in real time. Each bed shows
-            its last 10 s and a model status light. During a seizure, the bed
-            gets a red border and a SEIZURE tag. Click a bed to open its full
-            view.
+            its last 10 s and a status light. During a seizure, the light is
+            red, and the bed gets a flashing red border and a SEIZURE tag.
+            Click a bed to open its full view.
           </p>
           <p>
             In the full view, two dark lines mark the 10 s that the latest
@@ -64,19 +64,20 @@ export function Sidebar() {
         <section>
           <h2>Status light</h2>
           <p>
-            The light shows the latest model answer, 1:1. A new answer comes
-            every 2 s and reads the last 10 s.
+            Red means that a seizure is going on, by the seizure rule below.
+            Otherwise, the light shows the latest model answer. A new answer
+            comes every 2 s and reads the last 10 s.
           </p>
           <ul className="legend">
             <li>
+              <span className="light seizure" /> Seizure going on
+            </li>
+            <li>
+              <span className="light pattern" /> Concerning: an IIC pattern
+              (LPD, GPD, LRDA, GRDA), or one seizure call with P(SZ) ≥ 0.9
+            </li>
+            <li>
               <span className="light ok" /> Other, or a seizure call below 0.9
-            </li>
-            <li>
-              <span className="light pattern" /> Concerning pattern (LPD, GPD,
-              LRDA, GRDA)
-            </li>
-            <li>
-              <span className="light seizure" /> Seizure: P(SZ) ≥ 0.9
             </li>
           </ul>
         </section>
@@ -84,8 +85,8 @@ export function Sidebar() {
         <section>
           <h2>Seizure rule</h2>
           <p>
-            The light shows single answers. A seizure is an event, so it uses a
-            rule that follows the clinical reading:
+            A seizure is an event, not one answer. The rule follows the
+            clinical reading:
           </p>
           <p>
             <b>Start:</b> 2 red answers in a row. A real seizure lasts at least

@@ -1,5 +1,5 @@
-// The light shows the latest model answer, 1:1. Red needs P(SZ) >= 0.9: on our 23 clips, a plain
-// top-class SZ call is red for 67% of non-seizure answers; P >= 0.9 is red for 9.5% and catches 22 of 23.
+// A confident seizure call needs P(SZ) >= 0.9: on our 23 clips, a plain top-class SZ call is
+// 67% of non-seizure answers; P >= 0.9 is 9.5% of them, and still shows in 22 of 23 seizures.
 const RED_P = 0.9;
 
 // Severity of one model answer, 1 (lowest) to 6 (highest): Other; the 4 IIC patterns in rough
@@ -20,8 +20,9 @@ export function severity(p: number[], classes: string[]) {
   return top === "SZ" ? LEVEL.Other : LEVEL[top];
 }
 
-// Red: severity 6. Yellow: severity 2-5. Green: severity 1.
-export function status(p: number[], classes: string[]): Status {
+// One answer alone: "seizure" for a confident seizure call (severity 6), "pattern" for an IIC
+// pattern (severity 2-5), else "ok". The seizure rule below groups these answers into events.
+export function answerStatus(p: number[], classes: string[]): Status {
   const s = severity(p, classes);
   return s === MAX_SEVERITY ? "seizure" : s > 1 ? "pattern" : "ok";
 }
@@ -59,7 +60,7 @@ export type SeizureEvent = {
 // says a seizure is somewhere in its window, so the onset estimate is the first window's start:
 // the time a clinician dates the seizure from, not the time the model saw it.
 export function seizureEvents(probs: number[][], classes: string[], stepS: number, windowS: number) {
-  const red = probs.map((p) => status(p, classes) === "seizure");
+  const red = probs.map((p) => answerStatus(p, classes) === "seizure");
   const events: SeizureEvent[] = [];
   for (let k = 0; k + START_RUN <= red.length; k++) {
     if (!red.slice(k, k + START_RUN).every(Boolean)) continue;
@@ -80,3 +81,12 @@ export function seizureEvents(probs: number[][], classes: string[], stepS: numbe
 
 /** The event that is going on at answer k, if any: detected, and its end not yet known. */
 export const ongoingEvent = (events: SeizureEvent[], k: number) => events.find((e) => e.detectK <= k && k < e.endK);
+
+// A bed's status light at answer k. Red if and only if a seizure event is going on, so the light
+// always agrees with the SEIZURE tag and the band. Otherwise the light shows the latest answer:
+// yellow for an IIC pattern or a single confident seizure call (not yet a seizure), else green.
+// On our clips, red is 14% of non-seizure answers (1:1 was 9.5%): red holds until the end is known.
+export function bedStatus(events: SeizureEvent[], p: number[], k: number, classes: string[]): Status {
+  if (ongoingEvent(events, k)) return "seizure";
+  return answerStatus(p, classes) === "ok" ? "ok" : "pattern";
+}

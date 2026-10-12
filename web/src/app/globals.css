@@ -229,10 +229,46 @@ body {
   outline-offset: 2px;
 }
 
-/* A seizure event on the wall, as on Marcy's: a red border and a small red SEIZURE tag. */
+/* A seizure event on the wall, as on Marcy's: a red border and a small red SEIZURE tag. The
+   border flashes about 1.7 times per second (medical alarms flash fastest for high priority).
+   Every tile's ring runs the same animation from page load, so the flashing tiles stay in step;
+   the ring shows only on seizure tiles. */
+.tile {
+  position: relative;
+}
+
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 2px solid #e5484d;
+  border-radius: 7px;
+  visibility: hidden;
+  pointer-events: none;
+  animation: seizure-flash 0.3s ease-in-out infinite alternate;
+}
+
 .tile.seizure {
   border-color: rgba(229, 72, 77, 0.6);
-  box-shadow: 0 0 0 1px rgba(229, 72, 77, 0.6);
+}
+
+.tile.seizure::after {
+  visibility: visible;
+}
+
+@keyframes seizure-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile::after {
+    animation: none;
+  }
 }
 
 .seizure-flag {

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NAMES } from "@/lib/names";
 import { sampleAt } from "@/lib/playback";
-import { ongoingEvent, seizureEvents } from "@/lib/status";
+import { bedStatus, seizureEvents } from "@/lib/status";
 import { BedDetail } from "./BedDetail";
 import { EegTile } from "./EegTile";
 
@@ -79,7 +79,7 @@ export function EegGrid() {
             probs={t.probs}
             classes={manifest.classes}
             k={k}
-            seizure={ongoingEvent(events[i], k) !== undefined}
+            status={bedStatus(events[i], t.probs[k], k, manifest.classes)}
             t0={t0}
             fs={manifest.fs}
             nCh={manifest.channels.length}
