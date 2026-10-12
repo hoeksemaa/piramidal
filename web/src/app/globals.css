@@ -168,10 +168,16 @@ body {
   white-space: nowrap;
 }
 
-.tile header b {
+/* "Bed 9 Iris": the bed number bolder than the name. */
+.tile-title {
+  overflow: hidden;
   color: var(--text);
   font-size: 13px;
-  font-weight: 500;
+  text-overflow: ellipsis;
+}
+
+.tile-title b {
+  font-weight: 600;
 }
 
 /* Model status per bed: green = Other, yellow = one of the 4 IIC patterns, red = seizure. */
@@ -304,18 +310,6 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 12px 40px rgba(43, 40, 39, 0.25);
-}
-
-.detail header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 10px;
-}
-
-.detail header .latest {
-  color: var(--text);
-  font-weight: 500;
 }
 
 .detail-main {

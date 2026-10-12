@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { hms } from "@/lib/playback";
-import { SEVERITY_COLORS, answerLabel, bedStatus, ongoingEvent, severity, type SeizureEvent } from "@/lib/status";
+import { SEVERITY_COLORS, bedStatus, ongoingEvent, severity, type SeizureEvent } from "@/lib/status";
 import { BurdenHistogram } from "./BurdenHistogram";
 import { AXIS_H, EegChart } from "./EegChart";
 import { ModelWindow, STRIP_H } from "./ModelWindow";
@@ -52,10 +52,6 @@ export function BedDetail({ bed, name, info, recording, data, probs, classes, ev
     <div className="backdrop" onClick={onClose}>
       <section className="detail" role="dialog" aria-modal="true" aria-label={`Bed ${bed}, ${name}`} onClick={(e) => e.stopPropagation()}>
         <div className="detail-main">
-          <header>
-            <span className="latest">Latest answer</span>
-            <span>{answerLabel(probs[k], classes)}</span>
-          </header>
           <div className="detail-body">
             <div className="channels-col">
               <ol className="channels" style={{ paddingBottom: AXIS_H + STRIP_H }}>

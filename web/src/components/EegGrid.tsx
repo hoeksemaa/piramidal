@@ -79,6 +79,7 @@ export function EegGrid() {
           <EegTile
             key={t.file}
             bed={i + 1}
+            name={NAMES[i]}
             data={clips[i]}
             probs={t.probs}
             classes={manifest.classes}
