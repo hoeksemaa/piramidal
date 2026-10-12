@@ -7,6 +7,8 @@ const RED_P = 0.9;
 // order of published seizure risk (GRDA lowest, LPD highest); then a confident seizure call.
 const LEVEL: Record<string, number> = { Other: 1, GRDA: 2, GPD: 3, LRDA: 4, LPD: 5, SZ: 6 };
 export const MAX_SEVERITY = 6;
+/** The classes from least to most severe: no seizure to seizure. */
+export const SEVERITY_ORDER = Object.keys(LEVEL).sort((a, b) => LEVEL[a] - LEVEL[b]);
 // Display color per severity 1-6: green, 2 yellow, 2 orange, red.
 export const SEVERITY_COLORS = ["#3fa56b", "#e3c21a", "#e3c21a", "#ec7a2a", "#ec7a2a", "#e5484d"];
 
@@ -14,12 +16,15 @@ export type Status = "ok" | "pattern" | "seizure";
 
 const argmax = (p: number[]) => p.indexOf(Math.max(...p));
 
-export function severity(p: number[], classes: string[]) {
-  if (p[classes.indexOf("SZ")] >= RED_P) return LEVEL.SZ;
+/** The label of one answer: SZ if P(SZ) >= RED_P, else its top class, with SZ below RED_P as Other. */
+export function answerClass(p: number[], classes: string[]) {
+  if (p[classes.indexOf("SZ")] >= RED_P) return "SZ";
   const top = classes[argmax(p)];
   // A seizure call below RED_P counts as Other: on the test clips, 60% of non-seizure answers are one.
-  return top === "SZ" ? LEVEL.Other : LEVEL[top];
+  return top === "SZ" ? "Other" : top;
 }
+
+export const severity = (p: number[], classes: string[]) => LEVEL[answerClass(p, classes)];
 
 // One answer alone: "seizure" for a confident seizure call (severity 6), "pattern" for an IIC
 // pattern (severity 2-5), else "ok". The seizure rule below groups these answers into events.

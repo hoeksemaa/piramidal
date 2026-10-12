@@ -7,7 +7,7 @@ import { bedStatus, seizureEvents } from "@/lib/status";
 import { BedDetail } from "./BedDetail";
 import { EegTile } from "./EegTile";
 
-type Tile = { file: string; info: string; probs: number[][]; start_s: number; clock_start_s: number | null };
+type Tile = { file: string; info: string; recording: string; probs: number[][]; start_s: number; clock_start_s: number | null };
 type Manifest = {
   fs: number;
   channels: string[];
@@ -22,6 +22,7 @@ export function EegGrid() {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [error, setError] = useState(false);
   const [k, setK] = useState(0); // index of the latest model answer, the same for every bed
+  const [looped, setLooped] = useState(false); // the clips have played through once
   const [open, setOpen] = useState<number | null>(null); // index of the opened bed
   const close = useCallback(() => setOpen(null), []);
 
@@ -44,11 +45,14 @@ export function EegGrid() {
     const clipSamples = clips[0].length / manifest.channels.length;
     const answers = manifest.tiles[0].probs.length;
     let lastK = -1;
+    let lastLooped = false;
     let raf = 0;
     const tick = (now: number) => {
-      const clipS = (sampleAt(now, t0, manifest.fs) % clipSamples) / manifest.fs;
+      const n = sampleAt(now, t0, manifest.fs);
+      const clipS = (n % clipSamples) / manifest.fs;
       const kNow = Math.min(Math.floor(clipS / manifest.prob_step_s), answers - 1);
       if (kNow !== lastK) setK((lastK = kNow));
+      if (!lastLooped && n >= clipSamples) setLooped((lastLooped = true));
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -92,11 +96,13 @@ export function EegGrid() {
           bed={open + 1}
           name={NAMES[open]}
           info={manifest.tiles[open].info}
+          recording={manifest.tiles[open].recording}
           data={clips[open]}
           probs={manifest.tiles[open].probs}
           classes={manifest.classes}
           events={events[open]}
           k={k}
+          looped={looped}
           stepS={manifest.prob_step_s}
           probWindowS={manifest.prob_window_s}
           channels={manifest.channels}

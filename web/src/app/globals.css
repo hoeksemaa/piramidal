@@ -291,9 +291,11 @@ body {
   background: rgba(43, 40, 39, 0.35);
 }
 
+/* Left three quarters: the EEG. Right quarter: the patient and the pattern burden. */
 .detail {
+  position: relative;
   display: flex;
-  flex-direction: column;
+  gap: 16px;
   width: 92vw;
   height: 88vh;
   padding: 12px 16px 16px;
@@ -317,18 +319,152 @@ body {
   font-weight: 500;
 }
 
-.name {
-  color: var(--muted);
+.detail-main {
+  display: flex;
+  flex: 3;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.detail header .name {
-  font-size: 16px;
+.detail-side {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  padding: 36px 0 0 16px;
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.patient {
+  text-align: center;
+}
+
+.patient h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.patient p {
+  margin: 2px 0 12px;
+  font-size: 14px;
+}
+
+.patient dl {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 3px 10px;
+  margin: 0;
+  text-align: left;
+}
+
+.patient dd {
+  margin: 0;
+  color: var(--text);
+}
+
+/* Pattern burden: one bar per class, from no seizure (left) to seizure (right), as % of time. */
+.burden {
+  width: 100%;
+  max-width: 300px;
+  margin: auto 0;
+  padding: 16px 0;
+}
+
+.burden figcaption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.burden figcaption b {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.burden-bars {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  height: 160px;
+  margin-top: 22px;
+  border-bottom: 1px solid #cfcac6;
+}
+
+.burden-col {
+  position: relative;
+}
+
+.burden-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 3px 3px 0 0;
+  transition: height 0.3s;
+}
+
+.burden-pct {
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding-bottom: 2px;
+  color: var(--text);
+  font-size: 11px;
+  text-align: center;
+  transition: bottom 0.3s;
+}
+
+.burden-labels {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 10px;
+  text-align: center;
+}
+
+.burden-axis {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 10px;
+}
+
+/* A thin arrow between "no seizure" and "seizure". */
+.burden-arrow {
+  position: relative;
+  flex: 1;
+  border-top: 1px solid var(--muted);
+}
+
+.burden-arrow::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -4px;
+  border: 3.5px solid transparent;
+  border-left: 6px solid var(--muted);
+  border-right: 0;
+}
+
+.burden-note {
+  margin: 12px 0 0;
+  font-size: 10.5px;
+  text-align: center;
 }
 
 .close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
   width: 44px;
   height: 44px;
-  margin-left: auto;
   border: 0;
   border-radius: 8px;
   background: transparent;
