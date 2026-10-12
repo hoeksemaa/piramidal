@@ -1,0 +1,4 @@
+# Model weights and EEG data stay local
+models/
+data/
+web/public/eeg/
