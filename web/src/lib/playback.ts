@@ -4,3 +4,9 @@ export const START_S = 20;
 
 /** The newest sample index at time `now` (not wrapped to the clip length). */
 export const sampleAt = (now: number, t0: number, fs: number) => Math.floor((START_S + (now - t0) / 1000) * fs);
+
+/** Seconds -> "HH:MM:SS", wrapped to one day. */
+export const hms = (s: number) => {
+  const t = ((Math.floor(s) % 86400) + 86400) % 86400;
+  return [Math.floor(t / 3600), Math.floor(t / 60) % 60, t % 60].map((v) => String(v).padStart(2, "0")).join(":");
+};

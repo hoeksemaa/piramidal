@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { SEVERITY_COLORS, answerLabel, severity } from "@/lib/status";
+import { hms } from "@/lib/playback";
+import { SEVERITY_COLORS, answerLabel, bedStatus, ongoingEvent, severity, type SeizureEvent } from "@/lib/status";
 import { AXIS_H, EegChart } from "./EegChart";
 import { ModelWindow, STRIP_H } from "./ModelWindow";
+import { SeizureMarks } from "./SeizureMarks";
 import { StatusLight } from "./StatusLight";
 
 const WINDOW_S = 20;
@@ -15,6 +17,7 @@ type Props = {
   data: Int16Array;
   probs: number[][];
   classes: string[];
+  events: SeizureEvent[];
   k: number;
   stepS: number;
   probWindowS: number;
@@ -26,14 +29,17 @@ type Props = {
   onClose: () => void;
 };
 
-// One bed, opened over the wall: the last 20 s of EEG with channel names, a time axis, and the
-// latest model answer's 10 s window, still live.
-export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, probWindowS, channels, t0, fs, axisStartS, axisPrefix, onClose }: Props) {
+// One bed, opened over the wall: the last 20 s of EEG with channel names, a time axis, the
+// latest model answer's 10 s window, and seizure events (onset and detection), still live.
+export function BedDetail({ bed, name, info, data, probs, classes, events, k, stepS, probWindowS, channels, t0, fs, axisStartS, axisPrefix, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const ongoing = ongoingEvent(events, k);
+  const clock = (s: number) => axisPrefix + hms(axisStartS + s);
 
   // The backdrop covers the wall: it blocks every click behind it, and a click on it closes the bed.
   return (
@@ -43,8 +49,13 @@ export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, pro
           <b>Bed {bed}</b>
           <span className="name">{name}</span>
           <span>{info || "sex and age not listed"}</span>
-          <StatusLight probs={probs} k={k} classes={classes} />
+          <StatusLight status={bedStatus(events, probs[k], k, classes)} answer={probs[k]} classes={classes} />
           <span>{answerLabel(probs[k], classes)}</span>
+          {ongoing && (
+            <span className="seizure-now">
+              Seizure detected {clock(ongoing.detectS)} · onset ≈ {clock(ongoing.onsetS)}
+            </span>
+          )}
           <button className="close" aria-label="Close" onClick={onClose}>
             ×
           </button>
@@ -72,6 +83,15 @@ export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, pro
             axisPrefix={axisPrefix}
             stripH={STRIP_H}
           >
+            <SeizureMarks
+              events={events}
+              t0={t0}
+              fs={fs}
+              windowS={WINDOW_S}
+              clipS={data.length / channels.length / fs}
+              axisStartS={axisStartS}
+              axisPrefix={axisPrefix}
+            />
             <ModelWindow
               t0={t0}
               fs={fs}

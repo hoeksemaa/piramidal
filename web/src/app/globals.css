@@ -5,6 +5,7 @@
   --border: #e5e2e0;
   --text: #4f4846;
   --muted: #8a8685;
+  --accent: #4c6bc1; /* Marcy's seizure-onset blue */
 }
 
 html,
@@ -228,6 +229,57 @@ body {
   outline-offset: 2px;
 }
 
+/* A seizure event on the wall, as on Marcy's: a red border and a small red SEIZURE tag. The
+   border flashes about 1.7 times per second (medical alarms flash fastest for high priority).
+   Every tile's ring runs the same animation from page load, so the flashing tiles stay in step;
+   the ring shows only on seizure tiles. */
+.tile {
+  position: relative;
+}
+
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 2px solid #e5484d;
+  border-radius: 7px;
+  visibility: hidden;
+  pointer-events: none;
+  animation: seizure-flash 0.3s ease-in-out infinite alternate;
+}
+
+.tile.seizure {
+  border-color: rgba(229, 72, 77, 0.6);
+}
+
+.tile.seizure::after {
+  visibility: visible;
+}
+
+@keyframes seizure-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile::after {
+    animation: none;
+  }
+}
+
+.seizure-flag {
+  margin-left: auto;
+  color: #e5484d;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* One bed opened over the wall. The backdrop takes every click outside the bed. */
 .backdrop {
   position: fixed;
@@ -333,6 +385,91 @@ body {
   left: 0;
   right: 0;
   transition: background-color 0.3s;
+}
+
+/* Seizure events, in the style of Marcy's onset marker: a light blue band from onset to the end
+   (or to the live edge), a blue line under it, a dot and tag at the onset, and a dashed line at
+   detection. */
+.seizure-marks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.seizure-mark {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+  background: rgba(76, 107, 193, 0.1);
+  border-left: 1px solid rgba(76, 107, 193, 0.7);
+  border-bottom: 2px solid var(--accent);
+}
+
+.seizure-detect {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--accent);
+}
+
+.seizure-tag {
+  position: absolute;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.seizure-tag span:last-child {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* The dot is centered on the onset line; the detection tag sits just left of its line. */
+.seizure-onset-tag {
+  left: -6px;
+}
+
+.seizure-detect-tag {
+  right: 4px;
+}
+
+/* The estimated end: shown once the end is known, with its tag just right of the band. */
+.seizure-end {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+}
+
+.seizure-end-tag {
+  left: 4px;
+}
+
+.seizure-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.seizure-now {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(76, 107, 193, 0.1);
+  color: var(--accent);
 }
 
 /* The channel names, and the time axis unit level with the axis labels. */
