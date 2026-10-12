@@ -5,6 +5,7 @@
   --border: #e5e2e0;
   --text: #4f4846;
   --muted: #8a8685;
+  --accent: #4c6bc1; /* Marcy's seizure-onset blue */
 }
 
 html,
@@ -333,6 +334,77 @@ body {
   left: 0;
   right: 0;
   transition: background-color 0.3s;
+}
+
+/* Seizure events, in the style of Marcy's onset marker: a light blue band over the EEG that red
+   answers read, a blue line under it, a dot and tag at the onset, and a dashed line at detection. */
+.seizure-marks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.seizure-mark {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+  background: rgba(76, 107, 193, 0.1);
+  border-left: 1px solid rgba(76, 107, 193, 0.7);
+  border-bottom: 2px solid var(--accent);
+}
+
+.seizure-detect {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--accent);
+}
+
+.seizure-tag {
+  position: absolute;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.seizure-tag span:last-child {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* The dot is centered on the onset line; the detection tag sits just left of its line. */
+.seizure-onset-tag {
+  left: -6px;
+}
+
+.seizure-detect-tag {
+  right: 4px;
+}
+
+.seizure-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.seizure-now {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(76, 107, 193, 0.1);
+  color: var(--accent);
 }
 
 /* The channel names, and the time axis unit level with the axis labels. */

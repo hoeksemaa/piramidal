@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import { sampleAt } from "@/lib/playback";
+import { hms, sampleAt } from "@/lib/playback";
 
 const TRACE = "#3a3533"; // trace ink sampled from the Marcy video
 const GRID = "#ebe8e6";
@@ -20,12 +20,6 @@ type Props = {
   axisPrefix?: string; // put before each axis label
   stripH?: number; // CSS px kept empty under the time axis, for overlays
   children?: ReactNode; // overlays on top of the traces
-};
-
-/** Seconds -> "HH:MM:SS", wrapped to one day. */
-const hms = (s: number) => {
-  const t = ((Math.floor(s) % 86400) + 86400) % 86400;
-  return [Math.floor(t / 3600), Math.floor(t / 60) % 60, t % 60].map((v) => String(v).padStart(2, "0")).join(":");
 };
 
 // Scrolling strip chart: new samples enter at the right edge and move left. Each frame

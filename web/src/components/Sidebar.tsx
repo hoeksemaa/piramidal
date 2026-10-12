@@ -53,22 +53,41 @@ export function Sidebar() {
             its last 10 s and a model status light. Click a bed to open its full
             view.
           </p>
+          <p>
+            In the full view, two dark lines mark the 10 s that the latest
+            answer read. A blue band marks EEG that the model called a seizure.
+          </p>
         </section>
 
         <section>
           <h2>Status light</h2>
+          <p>
+            The light shows the latest model answer, 1:1. A new answer comes
+            every 2 s and reads the last 10 s.
+          </p>
           <ul className="legend">
             <li>
-              <span className="light ok" /> Normal
+              <span className="light ok" /> Other, or a seizure call below 0.9
             </li>
             <li>
               <span className="light pattern" /> Concerning pattern (LPD, GPD,
               LRDA, GRDA)
             </li>
             <li>
-              <span className="light seizure" /> Seizure: P ≥ 0.9 for 6 s
+              <span className="light seizure" /> Seizure: P(SZ) ≥ 0.9
             </li>
           </ul>
+        </section>
+
+        <section>
+          <h2>Seizure onset</h2>
+          <p>
+            A red answer says that a seizure is somewhere in its 10 s.
+            Clinicians date a seizure from its first EEG change, not from the
+            time they see it. Thus the onset tag goes at the start of the first
+            red window, 10 s before the detection tag. On our clips, that start
+            is a median 2 s before the expert label.
+          </p>
         </section>
 
         <section>

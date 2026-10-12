@@ -31,7 +31,7 @@ export function EegTile({ bed, data, probs, classes, k, t0, fs, nCh, onOpen }: P
     <section className="tile" role="button" tabIndex={0} aria-label={`Open bed ${bed}`} onClick={onOpen} onKeyDown={onKeyDown}>
       <header>
         <b>Bed {bed}</b>
-        <StatusLight probs={probs} k={k} classes={classes} />
+        <StatusLight answer={probs[k]} classes={classes} />
       </header>
       <EegChart data={data} t0={t0} fs={fs} nCh={nCh} windowS={WINDOW_S} />
     </section>
