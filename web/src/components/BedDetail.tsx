@@ -50,11 +50,16 @@ export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, pro
           </button>
         </header>
         <div className="detail-body">
-          <ol className="channels" style={{ paddingBottom: AXIS_H + STRIP_H }}>
-            {channels.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ol>
+          <div className="channels-col">
+            <ol className="channels" style={{ paddingBottom: AXIS_H + STRIP_H }}>
+              {channels.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ol>
+            <span className="axis-unit" style={{ height: AXIS_H }}>
+              seconds
+            </span>
+          </div>
           <EegChart
             data={data}
             t0={t0}

@@ -197,8 +197,27 @@ body {
   transition: background-color 0.3s;
 }
 
+/* The channel names, and the time axis unit level with the axis labels. */
+.channels-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.axis-unit {
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+  box-sizing: border-box;
+  font-size: 11px;
+}
+
 /* One name per lane: equal flex heights line up with the chart's equal lanes. */
 .channels {
+  flex: 1;
   display: flex;
   flex-direction: column;
   margin: 0;
