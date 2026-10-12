@@ -33,16 +33,12 @@ export function BurdenHistogram({ probs, classes, k, looped, stepS, clipS }: Pro
 
   return (
     <figure className="card burden">
-      <div className="risk-score">
-        <span>Risk score</span>
-        <b>{riskScore(counts)}</b>
-        <span>/ 100</span>
-      </div>
       <figcaption>
         <b>Pattern burden</b>
-        <span>
-          Model answers in the last {mss(answers * stepS)}, one every {stepS} s
+        <span className="risk-score" title="Demo risk score, 0-100">
+          Risk <b>{riskScore(counts)}</b>
         </span>
+        <span className="burden-span">Model answers, last {mss(answers * stepS)}</span>
       </figcaption>
       <div className="burden-bars">
         {SEVERITY_ORDER.map((c, i) => (

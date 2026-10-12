@@ -48,8 +48,7 @@ export function RiskPanel({ rows, span, onOpen }: Props) {
       </header>
       <div className="risk-cols" aria-hidden="true">
         <span>#</span>
-        <span>Bed</span>
-        <span>Now</span>
+        <span>Bed · now</span>
         <span>Risk</span>
       </div>
       <ol className="risk-list">
@@ -64,12 +63,14 @@ export function RiskPanel({ rows, span, onOpen }: Props) {
           >
             <button onClick={() => onOpen(r.bed)} aria-label={`Open bed ${r.bed}, ${r.name}: ${r.word}, risk ${r.score}`}>
               <span className="risk-rank">{i + 1}</span>
-              <span className="risk-bed">
-                <b>Bed {r.bed}</b> {r.name}
-              </span>
-              <span className="risk-now">
-                <i style={{ background: r.color }} />
-                {r.word}
+              <span className="risk-main">
+                <span className="risk-bed">
+                  <b>Bed {r.bed}</b> {r.name}
+                </span>
+                <span className="risk-now">
+                  <i style={{ background: r.color }} />
+                  {r.word}
+                </span>
               </span>
               <span className="risk-value">{r.score}</span>
             </button>

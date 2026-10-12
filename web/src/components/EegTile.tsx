@@ -44,9 +44,9 @@ export function EegTile({ bed, name, data, probs, classes, k, status, t0, fs, nC
         <span className="tile-title">
           <b>Bed {bed}</b> {name}
         </span>
-        {seizure && <span className="seizure-flag">Seizure</span>}
         <StatusLight status={status} answer={probs[k]} classes={classes} />
       </header>
+      {seizure && <span className="seizure-flag">Seizure</span>}
       <EegChart data={data} t0={t0} fs={fs} nCh={nCh} windowS={WINDOW_S} />
     </section>
   );
