@@ -178,17 +178,35 @@ body {
   min-height: 0;
 }
 
-/* The latest model answer's 10 s window: a severity-colored bar under the traces, between two dark lines. */
+/* The latest model answer's 10 s window: dark edge lines across the traces, and a
+   severity-colored bar under the time axis between the same edges. */
 .model-window {
   position: absolute;
+  top: 0;
+  bottom: 0;
   right: 2px;
-  box-sizing: border-box;
-  border-left: 2px solid #262221;
-  border-right: 2px solid #262221;
   pointer-events: none;
 }
 
-.model-window div {
+.model-window-edges,
+.model-window-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  border-left: 2px solid #262221;
+  border-right: 2px solid #262221;
+}
+
+.model-window-edges {
+  top: 0;
+}
+
+.model-window-bar {
+  bottom: 0;
+}
+
+.model-window-bar div {
   position: absolute;
   top: 4px;
   bottom: 4px;
@@ -207,7 +225,6 @@ body {
 .axis-unit {
   position: absolute;
   right: 10px;
-  bottom: 0;
   display: flex;
   align-items: center;
   padding-top: 4px;

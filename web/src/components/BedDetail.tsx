@@ -56,7 +56,7 @@ export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, pro
                 <li key={c}>{c}</li>
               ))}
             </ol>
-            <span className="axis-unit" style={{ height: AXIS_H }}>
+            <span className="axis-unit" style={{ height: AXIS_H, bottom: STRIP_H }}>
               seconds
             </span>
           </div>

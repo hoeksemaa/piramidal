@@ -13,11 +13,12 @@ type Props = {
   color: string; // severity color of the latest answer
 };
 
-export const STRIP_H = 14; // CSS px: the strip under the traces that holds the bar
+export const STRIP_H = 14; // CSS px: the strip under the time axis that holds the bar
 
-// A bar under the traces for the 10 s that the latest model answer covers, colored by its severity,
-// with dark lines at its start and end. It scrolls left with the EEG, then jumps right by stepS
-// (2 s) when the next answer arrives. Only its position changes per frame, through a ref.
+// The 10 s that the latest model answer covers: dark lines at its start and end across all the
+// traces, and a bar colored by its severity under the time axis. The lines skip the axis row, so
+// they do not cross the time labels. It scrolls left with the EEG, then jumps right by stepS (2 s)
+// when the next answer arrives. Only its position changes per frame, through a ref.
 export function ModelWindow({ t0, fs, windowS, probWindowS, stepS, color }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -38,8 +39,11 @@ export function ModelWindow({ t0, fs, windowS, probWindowS, stepS, color }: Prop
   }, [t0, fs, windowS, probWindowS, stepS]);
 
   return (
-    <div ref={ref} className="model-window" style={{ bottom: AXIS_H, height: STRIP_H }}>
-      <div style={{ background: color }} />
+    <div ref={ref} className="model-window">
+      <div className="model-window-edges" style={{ bottom: AXIS_H + STRIP_H }} />
+      <div className="model-window-bar" style={{ height: STRIP_H }}>
+        <div style={{ background: color }} />
+      </div>
     </div>
   );
 }

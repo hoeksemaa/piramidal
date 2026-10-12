@@ -18,7 +18,7 @@ type Props = {
   uvPerLane?: number; // each channel lane spans this many microvolts; higher squishes the traces
   axisStartS?: number; // if set, draw a time axis: the time of clip sample 0, in seconds after midnight
   axisPrefix?: string; // put before each axis label
-  stripH?: number; // CSS px kept empty between the lanes and the axis, for overlays
+  stripH?: number; // CSS px kept empty under the time axis, for overlays
   children?: ReactNode; // overlays on top of the traces
 };
 
@@ -43,8 +43,9 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLa
     const h = (canvas.height = Math.round(canvas.clientHeight * dpr));
     const axis = axisStartS !== undefined;
     const axisH = axis ? AXIS_H * dpr : 0;
-    const axisTop = h - axisH;
-    const lanesH = axisTop - stripH * dpr;
+    // Top to bottom: the lanes, the time axis, then an empty strip for overlays.
+    const axisTop = h - stripH * dpr - axisH;
+    const lanesH = axisTop;
     const lane = lanesH / nCh;
     const perWindow = fs * windowS;
     const pps = w / perWindow; // pixels per sample
