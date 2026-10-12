@@ -4,8 +4,12 @@ import { useEffect, useMemo, useRef } from "react";
 import { sampleAt } from "@/lib/playback";
 import { MAX_SEVERITY, severity } from "@/lib/status";
 
-// Segment colors, bottom to top: green, through yellow and orange, to red.
-const COLORS = ["#3fa56b", "#9dbf3a", "#e3c21a", "#f0a020", "#ec7a2a", "#e5484d"];
+// Segment colors, bottom to top: 1 green, 2 yellow, 2 orange, 1 red.
+const GREEN = "#3fa56b";
+const YELLOW = "#e3c21a";
+const ORANGE = "#ec7a2a";
+const RED = "#e5484d";
+const COLORS = [GREEN, YELLOW, YELLOW, ORANGE, ORANGE, RED];
 const OFF = "#ebe8e6";
 const SEG_H = 5; // CSS px
 const SEG_GAP = 2;
