@@ -7,6 +7,8 @@ const RED_RUN = 3; // answers in a row (6 s)
 // order of published seizure risk (GRDA lowest, LPD highest); then a confident seizure call.
 const LEVEL: Record<string, number> = { Other: 1, GRDA: 2, GPD: 3, LRDA: 4, LPD: 5, SZ: 6 };
 export const MAX_SEVERITY = 6;
+// Display color per severity 1-6: green, 2 yellow, 2 orange, red.
+export const SEVERITY_COLORS = ["#3fa56b", "#e3c21a", "#e3c21a", "#ec7a2a", "#ec7a2a", "#e5484d"];
 
 export type Status = "ok" | "pattern" | "seizure";
 

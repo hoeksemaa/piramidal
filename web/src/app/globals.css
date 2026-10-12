@@ -171,36 +171,70 @@ body {
   color: var(--text);
 }
 
-/* Names | chart, then label | meter: the meter's columns line up with the chart's time. */
 .detail-body {
   display: grid;
   grid-template-columns: max-content 1fr;
-  grid-template-rows: 1fr auto;
-  row-gap: 6px;
   flex: 1;
   min-height: 0;
 }
 
-.meter-label {
-  align-self: center;
-  justify-self: end;
-  padding-right: 10px;
-  font-size: 11px;
-}
-
-.meter {
-  position: relative;
-}
-
-.meter canvas {
+/* The latest model answer's 10 s window: dark edge lines across the traces, and a
+   severity-colored bar under the time axis between the same edges. */
+.model-window {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  bottom: 0;
+  right: 2px;
+  pointer-events: none;
+}
+
+.model-window-edges,
+.model-window-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  border-left: 2px solid #262221;
+  border-right: 2px solid #262221;
+}
+
+.model-window-edges {
+  top: 0;
+}
+
+.model-window-bar {
+  bottom: 0;
+}
+
+.model-window-bar div {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  transition: background-color 0.3s;
+}
+
+/* The channel names, and the time axis unit level with the axis labels. */
+.channels-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.axis-unit {
+  position: absolute;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+  box-sizing: border-box;
+  font-size: 11px;
 }
 
 /* One name per lane: equal flex heights line up with the chart's equal lanes. */
 .channels {
+  flex: 1;
   display: flex;
   flex-direction: column;
   margin: 0;

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { answerLabel } from "@/lib/status";
+import { SEVERITY_COLORS, answerLabel, severity } from "@/lib/status";
 import { AXIS_H, EegChart } from "./EegChart";
-import { SeverityMeter } from "./SeverityMeter";
+import { ModelWindow, STRIP_H } from "./ModelWindow";
 import { StatusLight } from "./StatusLight";
 
 const WINDOW_S = 20;
@@ -26,8 +26,8 @@ type Props = {
   onClose: () => void;
 };
 
-// One bed, opened over the wall: the last 20 s of EEG with channel names, a time axis, and a
-// severity meter, still live.
+// One bed, opened over the wall: the last 20 s of EEG with channel names, a time axis, and the
+// latest model answer's 10 s window, still live.
 export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, probWindowS, channels, t0, fs, axisStartS, axisPrefix, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -50,11 +50,16 @@ export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, pro
           </button>
         </header>
         <div className="detail-body">
-          <ol className="channels" style={{ paddingBottom: AXIS_H }}>
-            {channels.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ol>
+          <div className="channels-col">
+            <ol className="channels" style={{ paddingBottom: AXIS_H + STRIP_H }}>
+              {channels.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ol>
+            <span className="axis-unit" style={{ height: AXIS_H, bottom: STRIP_H }}>
+              seconds
+            </span>
+          </div>
           <EegChart
             data={data}
             t0={t0}
@@ -65,18 +70,17 @@ export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, pro
             uvPerLane={400}
             axisStartS={axisStartS}
             axisPrefix={axisPrefix}
-          />
-          <span className="meter-label">Severity</span>
-          <SeverityMeter
-            probs={probs}
-            classes={classes}
-            stepS={stepS}
-            probWindowS={probWindowS}
-            windowS={WINDOW_S}
-            t0={t0}
-            fs={fs}
-            clipSamples={data.length / channels.length}
-          />
+            stripH={STRIP_H}
+          >
+            <ModelWindow
+              t0={t0}
+              fs={fs}
+              windowS={WINDOW_S}
+              probWindowS={probWindowS}
+              stepS={stepS}
+              color={SEVERITY_COLORS[severity(probs[k], classes) - 1]}
+            />
+          </EegChart>
         </div>
       </section>
     </div>
