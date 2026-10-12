@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { sampleAt } from "@/lib/playback";
+import { BedDetail } from "./BedDetail";
 import { EegTile } from "./EegTile";
 
 type Tile = { file: string; probs: number[][] };
@@ -10,6 +12,9 @@ type Loaded = { manifest: Manifest; clips: Int16Array[]; t0: number };
 export function EegGrid() {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [error, setError] = useState(false);
+  const [k, setK] = useState(0); // index of the latest model answer, the same for every bed
+  const [open, setOpen] = useState<number | null>(null); // index of the opened bed
+  const close = useCallback(() => setOpen(null), []);
 
   useEffect(() => {
     (async () => {
@@ -22,25 +27,60 @@ export function EegGrid() {
     })().catch(() => setError(true));
   }, []);
 
+  // All beds share the clock, sample rate, and clip length, so one timer tracks the latest
+  // model answer for all of them. It changes every prob_step_s seconds.
+  useEffect(() => {
+    if (!loaded) return;
+    const { manifest, clips, t0 } = loaded;
+    const clipSamples = clips[0].length / manifest.channels.length;
+    const answers = manifest.tiles[0].probs.length;
+    let lastK = -1;
+    let raf = 0;
+    const tick = (now: number) => {
+      const clipS = (sampleAt(now, t0, manifest.fs) % clipSamples) / manifest.fs;
+      const kNow = Math.min(Math.floor(clipS / manifest.prob_step_s), answers - 1);
+      if (kNow !== lastK) setK((lastK = kNow));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [loaded]);
+
   if (error) return <p className="status">No EEG data. Run scripts/build_beds.py first.</p>;
   if (!loaded) return <p className="status">Loading recordings…</p>;
 
   const { manifest, clips, t0 } = loaded;
   return (
-    <main className="grid">
-      {manifest.tiles.map((t, i) => (
-        <EegTile
-          key={t.file}
-          bed={i + 1}
-          data={clips[i]}
-          probs={t.probs}
+    <>
+      <main className="grid">
+        {manifest.tiles.map((t, i) => (
+          <EegTile
+            key={t.file}
+            bed={i + 1}
+            data={clips[i]}
+            probs={t.probs}
+            classes={manifest.classes}
+            k={k}
+            t0={t0}
+            fs={manifest.fs}
+            nCh={manifest.channels.length}
+            onOpen={() => setOpen(i)}
+          />
+        ))}
+      </main>
+      {open !== null && (
+        <BedDetail
+          bed={open + 1}
+          data={clips[open]}
+          probs={manifest.tiles[open].probs}
           classes={manifest.classes}
-          stepS={manifest.prob_step_s}
+          k={k}
+          channels={manifest.channels}
           t0={t0}
           fs={manifest.fs}
-          nCh={manifest.channels.length}
+          onClose={close}
         />
-      ))}
-    </main>
+      )}
+    </>
   );
 }

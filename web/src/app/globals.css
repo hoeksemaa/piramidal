@@ -93,3 +93,98 @@ body {
 .status {
   padding: 16px;
 }
+
+.tile {
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.tile:hover {
+  border-color: #cfcac6;
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--muted);
+  outline-offset: 2px;
+}
+
+/* One bed opened over the wall. The backdrop takes every click outside the bed. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(43, 40, 39, 0.35);
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  width: 92vw;
+  height: 88vh;
+  padding: 12px 16px 16px;
+  box-sizing: border-box;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(43, 40, 39, 0.25);
+}
+
+.detail header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+}
+
+.detail header b {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.detail .window {
+  margin-left: auto;
+}
+
+.close {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: #efedeb;
+  color: var(--text);
+}
+
+.detail-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* One name per lane: equal flex heights line up with the chart's equal lanes. */
+.channels {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0 10px 0 0;
+  list-style: none;
+  font-size: 11px;
+}
+
+.channels li {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+}
