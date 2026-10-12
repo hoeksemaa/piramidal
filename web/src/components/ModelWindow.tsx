@@ -13,9 +13,11 @@ type Props = {
   color: string; // severity color of the latest answer
 };
 
-// A tinted band over the EEG: the 10 s that the latest model answer covers. It scrolls left with
-// the EEG, then jumps right by stepS (2 s) when the next answer arrives, so each position overlaps
-// the last one by 8 s. Only its position changes per frame, through a ref, not React state.
+export const STRIP_H = 14; // CSS px: the strip under the traces that holds the bar
+
+// A bar under the traces for the 10 s that the latest model answer covers, colored by its severity,
+// with dark lines at its start and end. It scrolls left with the EEG, then jumps right by stepS
+// (2 s) when the next answer arrives. Only its position changes per frame, through a ref.
 export function ModelWindow({ t0, fs, windowS, probWindowS, stepS, color }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -36,8 +38,8 @@ export function ModelWindow({ t0, fs, windowS, probWindowS, stepS, color }: Prop
   }, [t0, fs, windowS, probWindowS, stepS]);
 
   return (
-    <div ref={ref} className="model-window" style={{ bottom: AXIS_H, background: `${color}1f`, borderColor: `${color}99` }}>
-      <span>model window · {probWindowS} s</span>
+    <div ref={ref} className="model-window" style={{ bottom: AXIS_H, height: STRIP_H }}>
+      <div style={{ background: color }} />
     </div>
   );
 }

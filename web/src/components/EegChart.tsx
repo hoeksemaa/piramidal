@@ -6,7 +6,7 @@ import { sampleAt } from "@/lib/playback";
 const TRACE = "#3a3533"; // trace ink sampled from the Marcy video
 const GRID = "#ebe8e6";
 const MUTED = "#8a8685";
-export const AXIS_H = 20; // CSS px under the lanes for the time axis
+export const AXIS_H = 20; // CSS px at the bottom for the time axis
 
 type Props = {
   data: Int16Array; // sample-major: nCh values per sample, in uV
@@ -18,6 +18,7 @@ type Props = {
   uvPerLane?: number; // each channel lane spans this many microvolts; higher squishes the traces
   axisStartS?: number; // if set, draw a time axis: the time of clip sample 0, in seconds after midnight
   axisPrefix?: string; // put before each axis label
+  stripH?: number; // CSS px kept empty between the lanes and the axis, for overlays
   children?: ReactNode; // overlays on top of the traces
 };
 
@@ -30,7 +31,7 @@ const hms = (s: number) => {
 // Scrolling strip chart: new samples enter at the right edge and move left. Each frame
 // shifts the old pixels left by whole pixels, then draws only the new samples. The time
 // axis and 1 s gridlines are drawn into the same image, so they scroll with the EEG.
-export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLane = 200, axisStartS, axisPrefix = "", children }: Props) {
+export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLane = 200, axisStartS, axisPrefix = "", stripH = 0, children }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -42,7 +43,8 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLa
     const h = (canvas.height = Math.round(canvas.clientHeight * dpr));
     const axis = axisStartS !== undefined;
     const axisH = axis ? AXIS_H * dpr : 0;
-    const lanesH = h - axisH;
+    const axisTop = h - axisH;
+    const lanesH = axisTop - stripH * dpr;
     const lane = lanesH / nCh;
     const perWindow = fs * windowS;
     const pps = w / perWindow; // pixels per sample
@@ -78,7 +80,7 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLa
             ctx.fillStyle = GRID;
             ctx.fillRect(x, 0, dpr, lanesH);
             ctx.fillStyle = MUTED;
-            ctx.fillRect(x, lanesH, dpr, 4 * dpr);
+            ctx.fillRect(x, axisTop, dpr, 4 * dpr);
             if ((n / fs) % labelEvery === 0) pending.push(n);
           }
         }
@@ -103,7 +105,7 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLa
             const text = labelOf(pending[0]);
             const x = xOf(pending[0]);
             if (x + ctx.measureText(text).width / 2 > w - 2 * dpr) break;
-            ctx.fillText(text, x, lanesH + axisH / 2 + 2 * dpr);
+            ctx.fillText(text, x, axisTop + axisH / 2 + 2 * dpr);
             pending.shift();
           }
         }
@@ -114,7 +116,7 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLa
     raf = requestAnimationFrame(frame);
 
     return () => cancelAnimationFrame(raf);
-  }, [data, t0, fs, nCh, windowS, lineWidth, uvPerLane, axisStartS, axisPrefix]);
+  }, [data, t0, fs, nCh, windowS, lineWidth, uvPerLane, axisStartS, axisPrefix, stripH]);
 
   return (
     <div className="plot">

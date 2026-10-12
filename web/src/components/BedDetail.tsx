@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { SEVERITY_COLORS, answerLabel, severity } from "@/lib/status";
 import { AXIS_H, EegChart } from "./EegChart";
-import { ModelWindow } from "./ModelWindow";
+import { ModelWindow, STRIP_H } from "./ModelWindow";
 import { StatusLight } from "./StatusLight";
 
 const WINDOW_S = 20;
@@ -50,7 +50,7 @@ export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, pro
           </button>
         </header>
         <div className="detail-body">
-          <ol className="channels" style={{ paddingBottom: AXIS_H }}>
+          <ol className="channels" style={{ paddingBottom: AXIS_H + STRIP_H }}>
             {channels.map((c) => (
               <li key={c}>{c}</li>
             ))}
@@ -65,6 +65,7 @@ export function BedDetail({ bed, name, info, data, probs, classes, k, stepS, pro
             uvPerLane={400}
             axisStartS={axisStartS}
             axisPrefix={axisPrefix}
+            stripH={STRIP_H}
           >
             <ModelWindow
               t0={t0}
