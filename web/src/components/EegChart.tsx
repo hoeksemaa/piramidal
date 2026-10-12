@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { sampleAt } from "@/lib/playback";
 
 const TRACE = "#3a3533"; // trace ink sampled from the Marcy video
@@ -18,6 +18,7 @@ type Props = {
   uvPerLane?: number; // each channel lane spans this many microvolts; higher squishes the traces
   axisStartS?: number; // if set, draw a time axis: the time of clip sample 0, in seconds after midnight
   axisPrefix?: string; // put before each axis label
+  children?: ReactNode; // overlays on top of the traces
 };
 
 /** Seconds -> "HH:MM:SS", wrapped to one day. */
@@ -29,7 +30,7 @@ const hms = (s: number) => {
 // Scrolling strip chart: new samples enter at the right edge and move left. Each frame
 // shifts the old pixels left by whole pixels, then draws only the new samples. The time
 // axis and 1 s gridlines are drawn into the same image, so they scroll with the EEG.
-export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLane = 200, axisStartS, axisPrefix = "" }: Props) {
+export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLane = 200, axisStartS, axisPrefix = "", children }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -118,6 +119,7 @@ export function EegChart({ data, t0, fs, nCh, windowS, lineWidth = 0.75, uvPerLa
   return (
     <div className="plot">
       <canvas ref={canvasRef} />
+      {children}
     </div>
   );
 }
