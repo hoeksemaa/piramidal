@@ -168,10 +168,16 @@ body {
   white-space: nowrap;
 }
 
-.tile header b {
+/* "Bed 9 Iris": the bed number bolder than the name. */
+.tile-title {
+  overflow: hidden;
   color: var(--text);
   font-size: 13px;
-  font-weight: 500;
+  text-overflow: ellipsis;
+}
+
+.tile-title b {
+  font-weight: 600;
 }
 
 /* Model status per bed: green = Other, yellow = one of the 4 IIC patterns, red = seizure. */
@@ -291,9 +297,11 @@ body {
   background: rgba(43, 40, 39, 0.35);
 }
 
+/* Left three quarters: the EEG. Right quarter: the patient and the pattern burden. */
 .detail {
+  position: relative;
   display: flex;
-  flex-direction: column;
+  gap: 16px;
   width: 92vw;
   height: 88vh;
   padding: 12px 16px 16px;
@@ -304,31 +312,232 @@ body {
   box-shadow: 0 12px 40px rgba(43, 40, 39, 0.25);
 }
 
-.detail header {
+.detail-main {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 10px;
+  flex: 3;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.detail header b {
+/* Three cards of equal height that fill the right quarter, top to bottom: the patient, the status
+   now, and the pattern burden. The close button sits in the top card's corner. */
+.detail-side {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.detail-side .card {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.card {
+  margin: 0;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.patient {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* The status now: one big word on the status color. A seizure card flashes, like the wall. */
+.status-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  border-color: transparent; /* same box as the other cards, so all three are the same height */
+  text-align: center;
+  transition: background-color 0.3s;
+}
+
+.status-card b {
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.status-card span {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.status-card.seizure {
+  animation: seizure-card 0.3s ease-in-out infinite alternate;
+}
+
+.status-card.seizure b {
+  font-size: 40px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@keyframes seizure-card {
+  from {
+    background-color: #e5484d;
+  }
+  to {
+    background-color: #f39a9d;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-card.seizure {
+    animation: none;
+  }
+}
+
+.patient-bed {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.patient h2 {
+  margin: 0;
   color: var(--text);
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 500;
 }
 
-.name {
-  color: var(--muted);
+.patient p {
+  margin: 2px 0 12px;
+  font-size: 14px;
 }
 
-.detail header .name {
-  font-size: 16px;
+.patient dl {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 3px 10px;
+  margin: 0;
+  text-align: left;
+}
+
+.patient dd {
+  margin: 0;
+  color: var(--text);
+}
+
+/* Pattern burden: one bar per class, from no seizure (left) to seizure (right), as a count of answers. */
+.burden {
+  display: flex;
+  flex-direction: column;
+}
+
+.burden figcaption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.burden figcaption b {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.burden-bars {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  min-height: 60px;
+  margin-top: 22px;
+  border-bottom: 1px solid #cfcac6;
+}
+
+.burden-col {
+  position: relative;
+}
+
+.burden-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 3px 3px 0 0;
+  transition: height 0.3s;
+}
+
+.burden-count {
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding-bottom: 2px;
+  color: var(--text);
+  font-size: 11px;
+  text-align: center;
+  transition: bottom 0.3s;
+}
+
+.burden-labels {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 10px;
+  text-align: center;
+}
+
+/* A class name: hover (or tab to it) for a short description, shown over the bars across the
+   whole row, so it never runs past the panel's edges. */
+.burden-label {
+  justify-self: center;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  outline: none;
+}
+
+.burden-label:hover,
+.burden-label:focus-visible {
+  color: var(--text);
+}
+
+.burden-tip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 1;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: #2b2827;
+  box-shadow: 0 4px 12px rgba(43, 40, 39, 0.25);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.burden-label:hover .burden-tip,
+.burden-label:focus-visible .burden-tip {
+  display: block;
 }
 
 .close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
   width: 44px;
   height: 44px;
-  margin-left: auto;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -463,13 +672,6 @@ body {
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 0 2px #fff;
-}
-
-.seizure-now {
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(76, 107, 193, 0.1);
-  color: var(--accent);
 }
 
 /* The channel names, and the time axis unit level with the axis labels. */
